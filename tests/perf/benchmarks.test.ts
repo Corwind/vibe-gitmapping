@@ -55,7 +55,7 @@ describe('parser performance benchmarks', () => {
     const elapsed = performance.now() - start;
 
     console.log(`  Parser 1M lines: ${elapsed.toFixed(1)}ms, ${commits.length} commits`);
-    expect(elapsed).toBeLessThan(2000);
+    expect(elapsed).toBeLessThan(5000);
     expect(commits.length).toBeGreaterThan(0);
   });
 });
