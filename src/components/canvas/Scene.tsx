@@ -1,4 +1,5 @@
 import { OrbitControls } from '@react-three/drei';
+import FileNodes from './FileNodes';
 
 export default function Scene(): React.JSX.Element {
   return (
@@ -13,11 +14,7 @@ export default function Scene(): React.JSX.Element {
         minDistance={5}
         maxDistance={500}
       />
-      {/* Placeholder: a simple sphere at center to verify rendering */}
-      <mesh>
-        <sphereGeometry args={[1, 32, 32]} />
-        <meshStandardMaterial color="#4488ff" emissive="#1144aa" emissiveIntensity={0.5} />
-      </mesh>
+      <FileNodes />
       <gridHelper args={[100, 100, '#222233', '#111122']} />
     </>
   );
