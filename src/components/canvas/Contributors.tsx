@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useCallback } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Group, BufferGeometry, Float32BufferAttribute, Color, Vector3 } from 'three';
@@ -58,8 +58,8 @@ const interpolatedPositionMap = new Map<string, Vec3>();
 
 /**
  * Contributors renders contributor avatars as flat circles on the XZ plane
- * with smooth movement animation, name labels, and laser beams to target files.
- * Positioned slightly above Y=0 so they appear above the tree on a top-down view.
+ * with smooth movement animation, laser beams to target files.
+ * Name labels appear only when hovering over the avatar.
  */
 export default function Contributors(): React.JSX.Element {
   const groupRef = useRef<Group>(null);
@@ -210,6 +210,17 @@ function ContributorSprite({ index }: { index: number }): React.JSX.Element {
   const meshRef = useRef<THREE.Mesh>(null);
   const textRef = useRef<{ text: string }>(null);
   const initialRef = useRef<{ text: string }>(null);
+  const nameRef = useRef('');
+
+  const handlePointerOver = useCallback(() => {
+    if (nameRef.current) {
+      useTreeStore.getState().setHoveredContributorName(nameRef.current);
+    }
+  }, []);
+
+  const handlePointerOut = useCallback(() => {
+    useTreeStore.getState().setHoveredContributorName(null);
+  }, []);
 
   useFrame(() => {
     const group = spriteGroupRef.current;
@@ -223,6 +234,7 @@ function ContributorSprite({ index }: { index: number }): React.JSX.Element {
 
     group.visible = true;
     group.position.set(rs.currentPosition[0], rs.currentPosition[1], rs.currentPosition[2]);
+    nameRef.current = rs.name;
 
     // Update circle color to match contributor
     if (meshRef.current) {
@@ -232,23 +244,33 @@ function ContributorSprite({ index }: { index: number }): React.JSX.Element {
       mat.opacity = rs.opacity;
     }
 
-    // Update name label
-    if (textRef.current && textRef.current.text !== rs.name) {
-      textRef.current.text = rs.name;
-    }
-
     // Update initial letter
     const initial = rs.name.charAt(0).toUpperCase();
     if (initialRef.current && initialRef.current.text !== initial) {
       initialRef.current.text = initial;
+    }
+
+    // Show name label only when hovered
+    const hoveredName = useTreeStore.getState().hoveredContributorName;
+    const isHovered = hoveredName === rs.name;
+    if (textRef.current) {
+      if (isHovered && textRef.current.text !== rs.name) {
+        textRef.current.text = rs.name;
+      }
+      // Use the parent group visibility to toggle; we control the text group below
     }
   });
 
   return (
     <group ref={spriteGroupRef} visible={false}>
       {/* Flat circle visible from top-down camera — lies on XZ plane */}
-      <mesh ref={meshRef} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[0.9, 32]} />
+      <mesh
+        ref={meshRef}
+        rotation={[-Math.PI / 2, 0, 0]}
+        onPointerOver={handlePointerOver}
+        onPointerOut={handlePointerOut}
+      >
+        <circleGeometry args={[0.6, 32]} />
         <meshBasicMaterial color={0xffffff} transparent opacity={0.9} />
       </mesh>
       {/* First initial letter centered on the avatar circle */}
@@ -256,7 +278,7 @@ function ContributorSprite({ index }: { index: number }): React.JSX.Element {
         ref={initialRef}
         position={[0, 0.2, 0]}
         rotation={[-Math.PI / 2, 0, 0]}
-        fontSize={0.7}
+        fontSize={0.5}
         color="#ffffff"
         anchorX="center"
         anchorY="middle"
@@ -264,16 +286,43 @@ function ContributorSprite({ index }: { index: number }): React.JSX.Element {
       >
         {''}
       </Text>
-      {/* Name label positioned to the side, lying flat on XZ plane */}
+      {/* Name label — only visible on hover */}
+      <ContributorNameLabel index={index} textRef={textRef} />
+    </group>
+  );
+}
+
+function ContributorNameLabel({
+  index,
+  textRef,
+}: {
+  index: number;
+  textRef: React.RefObject<{ text: string } | null>;
+}): React.JSX.Element {
+  const labelGroupRef = useRef<Group>(null);
+
+  useFrame(() => {
+    const rs = renderStatePool[index];
+    const group = labelGroupRef.current;
+    if (!group || !rs) return;
+
+    const hoveredName = useTreeStore.getState().hoveredContributorName;
+    group.visible = hoveredName === rs.name && rs.opacity > 0;
+  });
+
+  return (
+    <group ref={labelGroupRef} visible={false}>
       <Text
         ref={textRef}
-        position={[1.2, 0.1, 0]}
+        position={[0.9, 0.1, 0]}
         rotation={[-Math.PI / 2, 0, 0]}
-        fontSize={0.35}
-        color="#dddddd"
+        fontSize={0.3}
+        color="#ffffff"
         anchorX="left"
         anchorY="middle"
         maxWidth={5}
+        outlineWidth={0.02}
+        outlineColor="#000000"
       >
         {''}
       </Text>

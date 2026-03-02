@@ -1,5 +1,5 @@
 import { useRef, useMemo, useCallback } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, ThreeEvent } from '@react-three/fiber';
 import { InstancedMesh, Object3D, CircleGeometry, Color, InstancedBufferAttribute } from 'three';
 import { useTreeStore } from '../../store/useTreeStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
@@ -10,8 +10,8 @@ import { FILE_PULSE_DURATION_MS, FILE_FADEOUT_DURATION_MS } from '../../utils/co
 /** Maximum number of instances the buffer can hold */
 const MAX_INSTANCES = 100_000;
 
-/** Shared base scale for file nodes — larger for Gource-style visibility */
-const BASE_SCALE = 1.0;
+/** Base scale for file node circles — small Gource-style dots */
+const BASE_SCALE = 0.35;
 
 /** Reusable dummy Object3D for matrix computation — never allocate in loops */
 const _dummy = new Object3D();
@@ -25,10 +25,7 @@ const _color = new Color();
  * FileNodes renders all file nodes in the repository tree as a single InstancedMesh.
  * Uses per-instance color via instanceColor attribute.
  * Glow/pulse for recently modified files, fade-out for deleted files.
- * Dirty-check skips matrix updates for static nodes.
- *
- * Visual style: Gource-like glowing dots on a dark background.
- * Uses MeshBasicMaterial for self-illuminating appearance (no light dependency).
+ * Supports hover detection via instanceId raycasting.
  */
 export default function FileNodes(): React.JSX.Element {
   const meshRef = useRef<InstancedMesh>(null);
@@ -37,11 +34,13 @@ export default function FileNodes(): React.JSX.Element {
   const prevPositions = useRef<Float32Array>(new Float32Array(MAX_INSTANCES * 3));
   const activeCountRef = useRef(0);
 
+  // Map from instance index to file ID for hover lookup
+  const instanceToFileId = useRef<string[]>([]);
+
   // Flat circle geometry — visible from top-down camera, cheaper than sphere
   const geometry = useMemo(() => new CircleGeometry(1, 24), []);
 
   // Build a snapshot of all files from the store, applying file filter if set.
-  // Dead files are included so the useFrame loop can handle fade-out animation.
   const getVisibleFiles = useCallback((): FileNode[] => {
     const allFiles = Array.from(useTreeStore.getState().files.values());
     const fileFilter = useSettingsStore.getState().fileFilter;
@@ -52,6 +51,23 @@ export default function FileNodes(): React.JSX.Element {
     } catch {
       return allFiles;
     }
+  }, []);
+
+  const handlePointerMove = useCallback((e: ThreeEvent<PointerEvent>) => {
+    e.stopPropagation();
+    const instanceId = e.instanceId;
+    if (instanceId !== undefined && instanceId < instanceToFileId.current.length) {
+      const fileId = instanceToFileId.current[instanceId];
+      if (fileId) {
+        useTreeStore.getState().setHoveredFileId(fileId);
+        return;
+      }
+    }
+    useTreeStore.getState().setHoveredFileId(null);
+  }, []);
+
+  const handlePointerOut = useCallback(() => {
+    useTreeStore.getState().setHoveredFileId(null);
   }, []);
 
   useFrame(({ clock }) => {
@@ -69,6 +85,7 @@ export default function FileNodes(): React.JSX.Element {
 
     const colorAttr = mesh.instanceColor;
     const prev = prevPositions.current;
+    const idMapping: string[] = [];
     let visibleIdx = 0;
 
     for (let i = 0; i < files.length; i++) {
@@ -124,8 +141,12 @@ export default function FileNodes(): React.JSX.Element {
       }
 
       colorAttr.setXYZ(visibleIdx, _color.r, _color.g, _color.b);
+      idMapping.push(file.id);
       visibleIdx++;
     }
+
+    // Update instance-to-fileId mapping for hover detection
+    instanceToFileId.current = idMapping;
 
     // Update active count
     mesh.count = visibleIdx;
@@ -139,8 +160,14 @@ export default function FileNodes(): React.JSX.Element {
   });
 
   return (
-    <instancedMesh ref={meshRef} args={[geometry, undefined, MAX_INSTANCES]} frustumCulled={false}>
-      <meshBasicMaterial toneMapped={false} vertexColors transparent opacity={0.95} />
+    <instancedMesh
+      ref={meshRef}
+      args={[geometry, undefined, MAX_INSTANCES]}
+      frustumCulled={false}
+      onPointerMove={handlePointerMove}
+      onPointerOut={handlePointerOut}
+    >
+      <meshBasicMaterial toneMapped={false} transparent opacity={0.95} />
     </instancedMesh>
   );
 }

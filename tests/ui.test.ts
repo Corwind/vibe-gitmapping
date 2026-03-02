@@ -164,6 +164,8 @@ describe('useTreeStore', () => {
     expect(state.dirs.size).toBe(0);
     expect(state.contributors.size).toBe(0);
     expect(state.selectedFileId).toBeNull();
+    expect(state.hoveredFileId).toBeNull();
+    expect(state.hoveredContributorName).toBeNull();
   });
 
   it('setSelectedFileId and clear', () => {
@@ -171,6 +173,20 @@ describe('useTreeStore', () => {
     expect(useTreeStore.getState().selectedFileId).toBe('src/main.ts');
     useTreeStore.getState().setSelectedFileId(null);
     expect(useTreeStore.getState().selectedFileId).toBeNull();
+  });
+
+  it('setHoveredFileId and clear', () => {
+    useTreeStore.getState().setHoveredFileId('src/utils.ts');
+    expect(useTreeStore.getState().hoveredFileId).toBe('src/utils.ts');
+    useTreeStore.getState().setHoveredFileId(null);
+    expect(useTreeStore.getState().hoveredFileId).toBeNull();
+  });
+
+  it('setHoveredContributorName and clear', () => {
+    useTreeStore.getState().setHoveredContributorName('Alice');
+    expect(useTreeStore.getState().hoveredContributorName).toBe('Alice');
+    useTreeStore.getState().setHoveredContributorName(null);
+    expect(useTreeStore.getState().hoveredContributorName).toBeNull();
   });
 });
 
