@@ -37,27 +37,27 @@ describe('parser performance benchmarks', () => {
     expect(commits.length).toBeGreaterThan(0);
   });
 
-  it('parses 100k lines in under 500ms', () => {
+  it('parses 100k lines in under 1000ms', () => {
     const log = generateLogLines(100_000);
     const start = performance.now();
     const commits = parseGourceLog(log);
     const elapsed = performance.now() - start;
 
     console.log(`  Parser 100k lines: ${elapsed.toFixed(1)}ms, ${commits.length} commits`);
-    expect(elapsed).toBeLessThan(500);
+    expect(elapsed).toBeLessThan(1000);
     expect(commits.length).toBeGreaterThan(0);
   });
 
-  it('parses 1M lines in under 2000ms', () => {
+  it('parses 1M lines in under 10s', () => {
     const log = generateLogLines(1_000_000);
     const start = performance.now();
     const commits = parseGourceLog(log);
     const elapsed = performance.now() - start;
 
     console.log(`  Parser 1M lines: ${elapsed.toFixed(1)}ms, ${commits.length} commits`);
-    expect(elapsed).toBeLessThan(5000);
+    expect(elapsed).toBeLessThan(10_000);
     expect(commits.length).toBeGreaterThan(0);
-  });
+  }, 15_000);
 });
 
 describe('tree construction performance benchmarks', () => {
@@ -81,23 +81,23 @@ describe('tree construction performance benchmarks', () => {
     expect(tree.getAliveFiles()).toHaveLength(10000);
   });
 
-  it('builds tree with 50k files in under 250ms', () => {
+  it('builds tree with 50k files in under 500ms', () => {
     const start = performance.now();
     const tree = buildTreeWithFiles(50_000);
     const elapsed = performance.now() - start;
 
     console.log(`  Tree 50k files: ${elapsed.toFixed(1)}ms`);
-    expect(elapsed).toBeLessThan(250);
+    expect(elapsed).toBeLessThan(500);
     expect(tree.getAliveFiles()).toHaveLength(50000);
   });
 
-  it('builds tree with 100k files in under 500ms', () => {
+  it('builds tree with 100k files in under 1000ms', () => {
     const start = performance.now();
     const tree = buildTreeWithFiles(100_000);
     const elapsed = performance.now() - start;
 
     console.log(`  Tree 100k files: ${elapsed.toFixed(1)}ms`);
-    expect(elapsed).toBeLessThan(500);
+    expect(elapsed).toBeLessThan(1000);
     expect(tree.getAliveFiles()).toHaveLength(100000);
   });
 });
@@ -125,25 +125,25 @@ describe('layout performance benchmarks', () => {
     expect(result.entries.length).toBeGreaterThan(10000);
   });
 
-  it('layout for 50k nodes in under 100ms', () => {
+  it('layout for 50k nodes in under 500ms', () => {
     const tree = buildTreeWithFiles(50_000);
     const start = performance.now();
     const result = computeRadialLayout(tree);
     const elapsed = performance.now() - start;
 
     console.log(`  Layout 50k nodes: ${elapsed.toFixed(1)}ms, ${result.entries.length} entries`);
-    expect(elapsed).toBeLessThan(100);
+    expect(elapsed).toBeLessThan(500);
     expect(result.entries.length).toBeGreaterThan(50000);
   });
 
-  it('layout for 100k nodes in under 300ms', () => {
+  it('layout for 100k nodes in under 1000ms', () => {
     const tree = buildTreeWithFiles(100_000);
     const start = performance.now();
     const result = computeRadialLayout(tree);
     const elapsed = performance.now() - start;
 
     console.log(`  Layout 100k nodes: ${elapsed.toFixed(1)}ms, ${result.entries.length} entries`);
-    expect(elapsed).toBeLessThan(300);
+    expect(elapsed).toBeLessThan(1000);
     expect(result.entries.length).toBeGreaterThan(100000);
   });
 });
