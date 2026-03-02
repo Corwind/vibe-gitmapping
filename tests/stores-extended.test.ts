@@ -93,7 +93,7 @@ describe('useAnimationStore — extended', () => {
 describe('useCameraStore — extended', () => {
   it('starts with correct defaults', () => {
     const state = useCameraStore.getState();
-    expect(state.mode).toBe('orbit');
+    expect(state.mode).toBe('free');
     expect(state.target).toEqual([0, 0, 0]);
     expect(state.distance).toBe(DEFAULT_CAMERA_DISTANCE);
     expect(state.autoTrackTarget).toEqual([0, 0, 0]);
@@ -102,8 +102,8 @@ describe('useCameraStore — extended', () => {
   it('setMode changes mode directly', () => {
     useCameraStore.getState().setMode('tracking');
     expect(useCameraStore.getState().mode).toBe('tracking');
-    useCameraStore.getState().setMode('orbit');
-    expect(useCameraStore.getState().mode).toBe('orbit');
+    useCameraStore.getState().setMode('free');
+    expect(useCameraStore.getState().mode).toBe('free');
   });
 
   it('setDistance updates camera distance', () => {
@@ -119,11 +119,11 @@ describe('useCameraStore — extended', () => {
   });
 
   it('toggleMode cycles between orbit and tracking', () => {
-    useCameraStore.getState().setMode('orbit');
+    useCameraStore.getState().setMode('free');
     useCameraStore.getState().toggleMode();
     expect(useCameraStore.getState().mode).toBe('tracking');
     useCameraStore.getState().toggleMode();
-    expect(useCameraStore.getState().mode).toBe('orbit');
+    expect(useCameraStore.getState().mode).toBe('free');
     useCameraStore.getState().toggleMode();
     expect(useCameraStore.getState().mode).toBe('tracking');
   });

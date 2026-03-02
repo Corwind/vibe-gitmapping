@@ -14,9 +14,10 @@ export default function App(): React.JSX.Element {
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
       <Canvas
-        camera={{ position: [0, 0, 50], fov: 60, near: 0.1, far: 2000 }}
+        camera={{ position: [0, 100, 0], fov: 60, near: 0.1, far: 2000 }}
         gl={{ antialias: true, alpha: false, preserveDrawingBuffer: true }}
-        style={{ background: '#0a0a0f' }}
+        style={{ background: '#050510' }}
+        orthographic={false}
       >
         <Scene />
       </Canvas>

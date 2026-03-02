@@ -140,15 +140,15 @@ describe('useAnimationStore', () => {
 });
 
 describe('useCameraStore', () => {
-  it('starts with orbit mode', () => {
-    expect(useCameraStore.getState().mode).toBe('orbit');
+  it('starts with free mode', () => {
+    expect(useCameraStore.getState().mode).toBe('free');
   });
 
-  it('toggleMode switches between orbit and tracking', () => {
+  it('toggleMode switches between free and tracking', () => {
     useCameraStore.getState().toggleMode();
     expect(useCameraStore.getState().mode).toBe('tracking');
     useCameraStore.getState().toggleMode();
-    expect(useCameraStore.getState().mode).toBe('orbit');
+    expect(useCameraStore.getState().mode).toBe('free');
   });
 
   it('setAutoTrackTarget updates target', () => {

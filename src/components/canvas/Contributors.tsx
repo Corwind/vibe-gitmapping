@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Group, BufferGeometry, Float32BufferAttribute, Color, Vector3 } from 'three';
-import { Billboard, Text } from '@react-three/drei';
+import { Text } from '@react-three/drei';
 import { useTreeStore } from '../../store/useTreeStore';
 import type { Contributor, Vec3 } from '../../types';
 import { CONTRIBUTOR_TRAVEL_DURATION_MS } from '../../utils/constants';
@@ -14,6 +14,9 @@ const IDLE_TIMEOUT_MS = 5000;
 
 /** Duration (ms) for a laser beam to stay visible after a file modify */
 const BEAM_DURATION_MS = 1000;
+
+/** Height above the XZ plane for contributor avatars */
+const CONTRIBUTOR_Y = 0.5;
 
 /** Module-level pre-allocated vectors for lerp computation */
 const _targetVec = new Vector3();
@@ -53,8 +56,9 @@ const renderStatePool: ContributorRenderState[] = Array.from(
 const interpolatedPositionMap = new Map<string, Vec3>();
 
 /**
- * Contributors renders contributor avatars as billboard sprites with
- * smooth movement animation, name labels, and laser beams to target files.
+ * Contributors renders contributor avatars as flat circles on the XZ plane
+ * with smooth movement animation, name labels, and laser beams to target files.
+ * Positioned slightly above Y=0 so they appear above the tree on a top-down view.
  */
 export default function Contributors(): React.JSX.Element {
   const groupRef = useRef<Group>(null);
@@ -90,14 +94,14 @@ export default function Contributors(): React.JSX.Element {
       rs.name = contributor.name;
       rs.color = contributor.color;
 
-      // Compute target position (from the target file)
+      // Compute target position on XZ plane, slightly above it
       let targetPos: Vec3 = contributor.position;
       if (contributor.targetFile) {
         const targetFile = files.get(contributor.targetFile);
         if (targetFile) {
           targetPos = [
             targetFile.position[0],
-            targetFile.position[1] + 1.5,
+            CONTRIBUTOR_Y,
             targetFile.position[2],
           ];
         }
@@ -178,7 +182,7 @@ export default function Contributors(): React.JSX.Element {
 
   return (
     <group ref={groupRef}>
-      {/* Contributor sprites */}
+      {/* Contributor sprites — flat circles visible from top-down */}
       {Array.from({ length: MAX_VISIBLE_CONTRIBUTORS }, (_, idx) => (
         <ContributorSprite key={idx} index={idx} />
       ))}
@@ -220,22 +224,23 @@ function ContributorSprite({ index }: { index: number }): React.JSX.Element {
 
   return (
     <group ref={spriteGroupRef} visible={false}>
-      <Billboard follow lockX={false} lockY={false} lockZ={false}>
-        <mesh>
-          <circleGeometry args={[0.4, 16]} />
-          <meshBasicMaterial color={0xffffff} transparent opacity={0.9} />
-        </mesh>
-        <Text
-          position={[0, -0.7, 0]}
-          fontSize={0.25}
-          color="#cccccc"
-          anchorX="center"
-          anchorY="top"
-          maxWidth={3}
-        >
-          {''}
-        </Text>
-      </Billboard>
+      {/* Flat circle visible from top-down camera — lies on XZ plane */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[0.6, 24]} />
+        <meshBasicMaterial color={0xffffff} transparent opacity={0.9} />
+      </mesh>
+      {/* Name label positioned to the side, lying flat on XZ plane */}
+      <Text
+        position={[1.0, 0.1, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        fontSize={0.35}
+        color="#dddddd"
+        anchorX="left"
+        anchorY="middle"
+        maxWidth={5}
+      >
+        {''}
+      </Text>
     </group>
   );
 }

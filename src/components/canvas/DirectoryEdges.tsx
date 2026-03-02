@@ -15,16 +15,16 @@ const MAX_FLOATS = MAX_EDGES * 2 * 3;
 const edgePositionArray = new Float32Array(MAX_FLOATS);
 const edgeColorArray = new Float32Array(MAX_FLOATS);
 
-/** Depth-based colors for directory edges */
+/** Subtle glow colors for directory edges — muted tones for Gource aesthetic */
 const DEPTH_COLORS = [
-  new Color(0x4466aa),
-  new Color(0x338866),
-  new Color(0x886633),
-  new Color(0x664488),
-  new Color(0x448888),
-  new Color(0x886644),
-  new Color(0x668844),
-  new Color(0x884466),
+  new Color(0x334466),
+  new Color(0x2a5544),
+  new Color(0x554433),
+  new Color(0x443355),
+  new Color(0x335555),
+  new Color(0x554438),
+  new Color(0x445533),
+  new Color(0x553344),
 ];
 
 /** Reusable Color for vertex color writes */
@@ -37,6 +37,7 @@ function depthColor(depth: number): Color {
 /**
  * DirectoryEdges renders ALL tree edges in a single lineSegments primitive.
  * Uses a pre-allocated BufferGeometry with vertex colors matching directory depth.
+ * Thin, semi-transparent lines for an organic Gource-like feel.
  */
 export default function DirectoryEdges(): React.JSX.Element | null {
   const geoRef = useRef<BufferGeometry>(null);
@@ -133,7 +134,7 @@ export default function DirectoryEdges(): React.JSX.Element | null {
         <bufferAttribute attach="attributes-position" args={[edgePositionArray, 3]} />
         <bufferAttribute attach="attributes-color" args={[edgeColorArray, 3]} />
       </bufferGeometry>
-      <lineBasicMaterial vertexColors transparent opacity={0.4} depthWrite={false} />
+      <lineBasicMaterial vertexColors transparent opacity={0.25} depthWrite={false} />
     </lineSegments>
   );
 }

@@ -1,6 +1,6 @@
 import { useRef } from 'react';
-import { useFrame } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
+import { useFrame, useThree } from '@react-three/fiber';
+import { MapControls } from '@react-three/drei';
 import { useCameraStore } from '../../store/useCameraStore';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import * as THREE from 'three';
@@ -18,15 +18,30 @@ function AnimationEngine(): null {
   return null;
 }
 
+/** Sets the camera to look straight down at the XZ plane on mount. */
+function CameraSetup(): null {
+  const { camera } = useThree();
+  const initialized = useRef(false);
+
+  if (!initialized.current) {
+    camera.position.set(0, 100, 0);
+    camera.lookAt(0, 0, 0);
+    camera.up.set(0, 0, -1);
+    initialized.current = true;
+  }
+
+  return null;
+}
+
 export default function Scene(): React.JSX.Element {
   const controlsRef = useRef<OrbitControlsImpl>(null);
   const mode = useCameraStore((s) => s.mode);
   const autoTrackTarget = useCameraStore((s) => s.autoTrackTarget);
 
-  // In tracking mode, smoothly lerp the orbit target toward autoTrackTarget
+  // In tracking mode, smoothly lerp the controls target toward autoTrackTarget on XZ plane
   useFrame(() => {
     if (mode === 'tracking' && controlsRef.current) {
-      _lerpTarget.set(autoTrackTarget[0], autoTrackTarget[1], autoTrackTarget[2]);
+      _lerpTarget.set(autoTrackTarget[0], 0, autoTrackTarget[2]);
       controlsRef.current.target.lerp(_lerpTarget, 0.03);
       controlsRef.current.update();
     }
@@ -35,23 +50,28 @@ export default function Scene(): React.JSX.Element {
   return (
     <>
       <AnimationEngine />
-      <ambientLight intensity={0.3} />
-      <pointLight position={[10, 10, 10]} intensity={1} />
-      <OrbitControls
+      <CameraSetup />
+      <ambientLight intensity={0.6} />
+      <MapControls
         ref={controlsRef}
+        enableRotate={false}
+        screenSpacePanning={false}
         enableDamping
         dampingFactor={0.1}
-        rotateSpeed={0.5}
-        zoomSpeed={0.8}
-        panSpeed={0.5}
+        zoomSpeed={1.2}
+        panSpeed={0.8}
         minDistance={5}
         maxDistance={500}
+        mouseButtons={{
+          LEFT: THREE.MOUSE.PAN,
+          MIDDLE: THREE.MOUSE.DOLLY,
+          RIGHT: THREE.MOUSE.PAN,
+        }}
       />
       <FileNodes />
       <DirectoryEdges />
       <Contributors />
       <Effects />
-      <gridHelper args={[100, 100, '#222233', '#111122']} />
     </>
   );
 }

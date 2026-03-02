@@ -9,8 +9,8 @@ import { FILE_PULSE_DURATION_MS, FILE_FADEOUT_DURATION_MS } from '../../utils/co
 /** Maximum number of instances the buffer can hold */
 const MAX_INSTANCES = 100_000;
 
-/** Shared base scale for file nodes */
-const BASE_SCALE = 0.3;
+/** Shared base scale for file nodes — larger for Gource-style visibility */
+const BASE_SCALE = 0.6;
 
 /** Reusable dummy Object3D for matrix computation — never allocate in loops */
 const _dummy = new Object3D();
@@ -23,6 +23,9 @@ const _color = new Color();
  * Uses per-instance color via instanceColor attribute.
  * Glow/pulse for recently modified files, fade-out for deleted files.
  * Dirty-check skips matrix updates for static nodes.
+ *
+ * Visual style: Gource-like glowing dots on a dark background.
+ * Uses MeshBasicMaterial for self-illuminating appearance (no light dependency).
  */
 export default function FileNodes(): React.JSX.Element {
   const meshRef = useRef<InstancedMesh>(null);
@@ -31,8 +34,8 @@ export default function FileNodes(): React.JSX.Element {
   const prevPositions = useRef<Float32Array>(new Float32Array(MAX_INSTANCES * 3));
   const activeCountRef = useRef(0);
 
-  // Pre-allocate the geometry once
-  const geometry = useMemo(() => new SphereGeometry(1, 12, 8), []);
+  // Pre-allocate the geometry once — higher segment count for smoother circles
+  const geometry = useMemo(() => new SphereGeometry(1, 16, 12), []);
 
   // Build a snapshot of all files from the store.
   // Dead files are included so the useFrame loop can handle fade-out animation.
@@ -100,10 +103,10 @@ export default function FileNodes(): React.JSX.Element {
       // Update instance color
       _color.setHex(file.color);
 
-      // Emissive boost for recently modified files (brighten the color)
+      // Emissive boost for recently modified files — bright glow that fades
       if (file.alive && elapsedMs < FILE_PULSE_DURATION_MS) {
         const t = 1.0 - elapsedMs / FILE_PULSE_DURATION_MS;
-        const boost = t * t * 0.5;
+        const boost = t * t * 0.8;
         _color.r = Math.min(1.0, _color.r + boost);
         _color.g = Math.min(1.0, _color.g + boost);
         _color.b = Math.min(1.0, _color.b + boost);
@@ -126,7 +129,7 @@ export default function FileNodes(): React.JSX.Element {
 
   return (
     <instancedMesh ref={meshRef} args={[geometry, undefined, MAX_INSTANCES]} frustumCulled={false}>
-      <meshStandardMaterial toneMapped={false} vertexColors />
+      <meshBasicMaterial toneMapped={false} vertexColors transparent opacity={0.95} />
     </instancedMesh>
   );
 }

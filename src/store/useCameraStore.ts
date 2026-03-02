@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import type { Vec3 } from '../types';
 import { DEFAULT_CAMERA_DISTANCE } from '../utils/constants';
 
-export type CameraMode = 'orbit' | 'tracking';
+export type CameraMode = 'free' | 'tracking';
 
 export interface CameraState {
   mode: CameraMode;
@@ -20,12 +20,12 @@ export interface CameraActions {
 }
 
 export const useCameraStore = create<CameraState & CameraActions>()((set) => ({
-  mode: 'orbit',
+  mode: 'free',
   target: [0, 0, 0],
   distance: DEFAULT_CAMERA_DISTANCE,
   autoTrackTarget: [0, 0, 0],
   setMode: (mode: CameraMode): void => set({ mode }),
-  toggleMode: (): void => set((s) => ({ mode: s.mode === 'orbit' ? 'tracking' : 'orbit' })),
+  toggleMode: (): void => set((s) => ({ mode: s.mode === 'free' ? 'tracking' : 'free' })),
   setTarget: (target: Vec3): void => set({ target }),
   setDistance: (distance: number): void => set({ distance }),
   setAutoTrackTarget: (target: Vec3): void => set({ autoTrackTarget: target }),
