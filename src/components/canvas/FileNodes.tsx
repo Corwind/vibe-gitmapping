@@ -1,14 +1,6 @@
 import { useRef, useMemo, useCallback } from 'react';
 import { useFrame } from '@react-three/fiber';
-import {
-  InstancedMesh,
-  Object3D,
-  SphereGeometry,
-  Color,
-  Matrix4,
-  Frustum,
-  InstancedBufferAttribute,
-} from 'three';
+import { InstancedMesh, Object3D, SphereGeometry, Color, InstancedBufferAttribute } from 'three';
 import { useTreeStore } from '../../store/useTreeStore';
 import type { FileNode } from '../../types';
 import { computeGlowScale, computeFadeOpacity } from '../../utils/fileNodeHelpers';
@@ -26,17 +18,11 @@ const _dummy = new Object3D();
 /** Reusable Color for instance color updates */
 const _color = new Color();
 
-/** Reusable Matrix4 for frustum computation */
-const _projScreenMatrix = new Matrix4();
-
-/** Reusable Frustum for culling */
-const _frustum = new Frustum();
-
 /**
  * FileNodes renders all file nodes in the repository tree as a single InstancedMesh.
  * Uses per-instance color via instanceColor attribute.
  * Glow/pulse for recently modified files, fade-out for deleted files.
- * Frustum culling to skip off-screen matrix updates.
+ * Dirty-check skips matrix updates for static nodes.
  */
 export default function FileNodes(): React.JSX.Element {
   const meshRef = useRef<InstancedMesh>(null);
@@ -48,33 +34,18 @@ export default function FileNodes(): React.JSX.Element {
   // Pre-allocate the geometry once
   const geometry = useMemo(() => new SphereGeometry(1, 12, 8), []);
 
-  // Build a snapshot of visible files from the store
+  // Build a snapshot of all files from the store.
+  // Dead files are included so the useFrame loop can handle fade-out animation.
   const getVisibleFiles = useCallback((): FileNode[] => {
-    const state = useTreeStore.getState();
-    const result: FileNode[] = [];
-    for (const file of state.files.values()) {
-      if (file.alive) {
-        result.push(file);
-      } else {
-        // Keep recently deleted files for fade-out animation
-        // We use Date.now() as a rough check; the precise timing
-        // is handled in useFrame with the clock
-        result.push(file);
-      }
-    }
-    return result;
+    return Array.from(useTreeStore.getState().files.values());
   }, []);
 
-  useFrame(({ clock, camera }) => {
+  useFrame(({ clock }) => {
     const mesh = meshRef.current;
     if (!mesh) return;
 
     const currentTimeMs = clock.getElapsedTime() * 1000;
     const files = getVisibleFiles();
-
-    // Build frustum from camera for culling
-    _projScreenMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
-    _frustum.setFromProjectionMatrix(_projScreenMatrix);
 
     // Ensure instanceColor attribute exists
     if (!mesh.instanceColor) {
