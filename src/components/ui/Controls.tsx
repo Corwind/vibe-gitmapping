@@ -97,13 +97,13 @@ export default function Controls(): React.JSX.Element | null {
         </div>
       </div>
 
-      {/* Speed */}
+      {/* Speed — display as multiplier (bigger = faster) */}
       <div style={styles.section}>
-        <label style={styles.label}>Speed (sec/day)</label>
+        <label style={styles.label}>Speed</label>
         <select style={styles.select} value={secondsPerDay} onChange={handleSpeedChange}>
           {SPEED_PRESETS.map((s) => (
             <option key={s} value={s}>
-              {s}x
+              {Math.round(1 / s)}x
             </option>
           ))}
         </select>

@@ -6,6 +6,7 @@ import { useSettingsStore } from '../../store/useSettingsStore';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import * as THREE from 'three';
 import FileNodes from './FileNodes';
+import FileLabels from './FileLabels';
 import DirectoryEdges from './DirectoryEdges';
 import Contributors from './Contributors';
 import Effects from './Effects';
@@ -25,8 +26,9 @@ function CameraSetup(): null {
 
   useEffect(() => {
     camera.position.set(0, 100, 0);
-    camera.lookAt(0, 0, 0);
     camera.up.set(0, 0, -1);
+    camera.lookAt(0, 0, 0);
+    camera.updateProjectionMatrix();
   }, [camera]);
 
   return null;
@@ -53,11 +55,14 @@ export default function Scene(): React.JSX.Element {
     }
   }, []);
 
-  // In tracking mode, smoothly lerp the controls target toward autoTrackTarget on XZ plane
-  useFrame(() => {
+  // In tracking mode, smoothly lerp the controls target toward autoTrackTarget on XZ plane.
+  // With an orthographic camera we also shift camera.position on X/Z to keep it above the target.
+  useFrame(({ camera }) => {
     if (mode === 'tracking' && controlsRef.current) {
       _lerpTarget.set(autoTrackTarget[0], 0, autoTrackTarget[2]);
       controlsRef.current.target.lerp(_lerpTarget, 0.03);
+      camera.position.x = controlsRef.current.target.x;
+      camera.position.z = controlsRef.current.target.z;
       controlsRef.current.update();
     }
   });
@@ -70,13 +75,13 @@ export default function Scene(): React.JSX.Element {
       <MapControls
         ref={controlsRef}
         enableRotate={false}
-        screenSpacePanning={false}
+        screenSpacePanning={true}
         enableDamping
         dampingFactor={0.1}
         zoomSpeed={1.2}
         panSpeed={0.8}
-        minDistance={5}
-        maxDistance={500}
+        minZoom={0.5}
+        maxZoom={100}
         mouseButtons={{
           LEFT: THREE.MOUSE.PAN,
           MIDDLE: THREE.MOUSE.DOLLY,
@@ -84,6 +89,7 @@ export default function Scene(): React.JSX.Element {
         }}
       />
       <FileNodes />
+      <FileLabels />
       <DirectoryEdges />
       <Contributors />
       <Effects />

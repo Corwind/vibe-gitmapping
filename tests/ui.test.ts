@@ -288,14 +288,22 @@ describe('isValidGitUrl', () => {
 // ─── Constants Tests ─────────────────────────────────────────────────────────
 
 describe('SPEED_PRESETS', () => {
-  it('is sorted ascending', () => {
+  it('is sorted descending (fastest secondsPerDay first = biggest speed multiplier first)', () => {
     for (let i = 1; i < SPEED_PRESETS.length; i++) {
-      expect(SPEED_PRESETS[i]).toBeGreaterThan(SPEED_PRESETS[i - 1]);
+      expect(SPEED_PRESETS[i]).toBeLessThan(SPEED_PRESETS[i - 1]);
     }
   });
 
-  it('contains default speed of 1', () => {
+  it('contains default speed of 1 (1x)', () => {
     expect(SPEED_PRESETS).toContain(1);
+  });
+
+  it('all presets produce speed multipliers between 1x and 100x', () => {
+    for (const s of SPEED_PRESETS) {
+      const mult = 1 / s;
+      expect(mult).toBeGreaterThanOrEqual(1);
+      expect(mult).toBeLessThanOrEqual(100);
+    }
   });
 });
 
@@ -307,7 +315,11 @@ describe('KEY_SPEED_MAP', () => {
     }
   });
 
-  it('key 5 maps to 1 (normal speed)', () => {
-    expect(KEY_SPEED_MAP['5']).toBe(1);
+  it('key 1 maps to 1 (1x, normal speed)', () => {
+    expect(KEY_SPEED_MAP['1']).toBe(1);
+  });
+
+  it('key 9 maps to 0.01 (100x, fastest speed)', () => {
+    expect(KEY_SPEED_MAP['9']).toBe(0.01);
   });
 });

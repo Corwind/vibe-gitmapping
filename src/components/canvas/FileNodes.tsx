@@ -1,6 +1,6 @@
 import { useRef, useMemo, useCallback } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { InstancedMesh, Object3D, SphereGeometry, Color, InstancedBufferAttribute } from 'three';
+import { InstancedMesh, Object3D, CircleGeometry, Color, InstancedBufferAttribute } from 'three';
 import { useTreeStore } from '../../store/useTreeStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import type { FileNode } from '../../types';
@@ -11,10 +11,12 @@ import { FILE_PULSE_DURATION_MS, FILE_FADEOUT_DURATION_MS } from '../../utils/co
 const MAX_INSTANCES = 100_000;
 
 /** Shared base scale for file nodes — larger for Gource-style visibility */
-const BASE_SCALE = 0.6;
+const BASE_SCALE = 1.0;
 
 /** Reusable dummy Object3D for matrix computation — never allocate in loops */
 const _dummy = new Object3D();
+// Pre-set rotation so circles lie flat on XZ plane (visible from top-down camera)
+_dummy.rotation.set(-Math.PI / 2, 0, 0);
 
 /** Reusable Color for instance color updates */
 const _color = new Color();
@@ -35,8 +37,8 @@ export default function FileNodes(): React.JSX.Element {
   const prevPositions = useRef<Float32Array>(new Float32Array(MAX_INSTANCES * 3));
   const activeCountRef = useRef(0);
 
-  // Pre-allocate the geometry once — higher segment count for smoother circles
-  const geometry = useMemo(() => new SphereGeometry(1, 16, 12), []);
+  // Flat circle geometry — visible from top-down camera, cheaper than sphere
+  const geometry = useMemo(() => new CircleGeometry(1, 24), []);
 
   // Build a snapshot of all files from the store, applying file filter if set.
   // Dead files are included so the useFrame loop can handle fade-out animation.

@@ -209,6 +209,7 @@ function ContributorSprite({ index }: { index: number }): React.JSX.Element {
   const spriteGroupRef = useRef<Group>(null);
   const meshRef = useRef<THREE.Mesh>(null);
   const textRef = useRef<{ text: string }>(null);
+  const initialRef = useRef<{ text: string }>(null);
 
   useFrame(() => {
     const group = spriteGroupRef.current;
@@ -235,19 +236,38 @@ function ContributorSprite({ index }: { index: number }): React.JSX.Element {
     if (textRef.current && textRef.current.text !== rs.name) {
       textRef.current.text = rs.name;
     }
+
+    // Update initial letter
+    const initial = rs.name.charAt(0).toUpperCase();
+    if (initialRef.current && initialRef.current.text !== initial) {
+      initialRef.current.text = initial;
+    }
   });
 
   return (
     <group ref={spriteGroupRef} visible={false}>
       {/* Flat circle visible from top-down camera — lies on XZ plane */}
       <mesh ref={meshRef} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[0.6, 24]} />
+        <circleGeometry args={[0.9, 32]} />
         <meshBasicMaterial color={0xffffff} transparent opacity={0.9} />
       </mesh>
+      {/* First initial letter centered on the avatar circle */}
+      <Text
+        ref={initialRef}
+        position={[0, 0.2, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        fontSize={0.7}
+        color="#ffffff"
+        anchorX="center"
+        anchorY="middle"
+        fontWeight="bold"
+      >
+        {''}
+      </Text>
       {/* Name label positioned to the side, lying flat on XZ plane */}
       <Text
         ref={textRef}
-        position={[1.0, 0.1, 0]}
+        position={[1.2, 0.1, 0]}
         rotation={[-Math.PI / 2, 0, 0]}
         fontSize={0.35}
         color="#dddddd"

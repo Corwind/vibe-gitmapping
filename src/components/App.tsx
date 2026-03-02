@@ -14,10 +14,10 @@ export default function App(): React.JSX.Element {
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
       <Canvas
-        camera={{ position: [0, 100, 0], fov: 60, near: 0.1, far: 2000 }}
+        orthographic
+        camera={{ position: [0, 100, 0], zoom: 8, near: 0.1, far: 2000 }}
         gl={{ antialias: true, alpha: false, preserveDrawingBuffer: true }}
         style={{ background: '#050510' }}
-        orthographic={false}
       >
         <Scene />
       </Canvas>
