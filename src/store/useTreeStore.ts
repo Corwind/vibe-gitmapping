@@ -22,6 +22,7 @@ const initialState: TreeState = {
 
 export const useTreeStore = create<TreeState & TreeActions>()((set) => ({
   ...initialState,
-  reset: (): void => set({ ...initialState, files: new Map(), dirs: new Map(), contributors: new Map() }),
+  reset: (): void =>
+    set({ ...initialState, files: new Map(), dirs: new Map(), contributors: new Map() }),
   setSelectedFileId: (id: string | null): void => set({ selectedFileId: id }),
 }));

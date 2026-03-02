@@ -37,9 +37,7 @@ describe('parseGourceLogEntry', () => {
   });
 
   it('handles deeply nested file paths', () => {
-    const entry = parseGourceLogEntry(
-      '1000000000|Dev|A|a/b/c/d/e/f/g/deep.rs|DDDDD0',
-    );
+    const entry = parseGourceLogEntry('1000000000|Dev|A|a/b/c/d/e/f/g/deep.rs|DDDDD0');
     expect(entry).not.toBeNull();
     expect(entry!.filepath).toBe('a/b/c/d/e/f/g/deep.rs');
   });
@@ -141,9 +139,7 @@ describe('parseGourceLog', () => {
     const commits = parseGourceLog(log);
     expect(commits).toHaveLength(3);
 
-    const aliceFirst = commits.find(
-      (c) => c.author === 'Alice' && c.timestamp === 1000000000,
-    );
+    const aliceFirst = commits.find((c) => c.author === 'Alice' && c.timestamp === 1000000000);
     expect(aliceFirst).toBeDefined();
     expect(aliceFirst!.files).toHaveLength(2);
   });

@@ -50,15 +50,15 @@ export function computeRadialLayout(tree: FileTree): LayoutResult {
     // Calculate angular spread for children
     // For the root, children span the full circle.
     // For deeper nodes, children get a proportional arc.
-    const totalArc = dirId === '' ? Math.PI * 2 : computeArcForChildren(children.length, childDepth);
+    const totalArc =
+      dirId === '' ? Math.PI * 2 : computeArcForChildren(children.length, childDepth);
 
     const startAngle = dirId === '' ? 0 : parentAngle - totalArc / 2;
     const step = children.length === 1 ? 0 : totalArc / (children.length - 1);
 
     for (let i = 0; i < children.length; i++) {
       const childId = children[i];
-      const angle =
-        children.length === 1 ? parentAngle : startAngle + i * step;
+      const angle = children.length === 1 ? parentAngle : startAngle + i * step;
 
       // Position relative to parent (for root) or absolute from center
       const x = Math.cos(angle) * radius;

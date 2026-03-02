@@ -1,12 +1,6 @@
 import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import {
-  Group,
-  BufferGeometry,
-  Float32BufferAttribute,
-  Color,
-  Vector3,
-} from 'three';
+import { Group, BufferGeometry, Float32BufferAttribute, Color, Vector3 } from 'three';
 import { Billboard, Text } from '@react-three/drei';
 import { useTreeStore } from '../../store/useTreeStore';
 import type { Contributor, Vec3 } from '../../types';
@@ -192,14 +186,8 @@ export default function Contributors(): React.JSX.Element {
       {/* Laser beams as lineSegments */}
       <lineSegments frustumCulled={false}>
         <bufferGeometry ref={beamGeoRef}>
-          <bufferAttribute
-            attach="attributes-position"
-            args={[beamPositionArray, 3]}
-          />
-          <bufferAttribute
-            attach="attributes-color"
-            args={[beamColorArray, 3]}
-          />
+          <bufferAttribute attach="attributes-position" args={[beamPositionArray, 3]} />
+          <bufferAttribute attach="attributes-color" args={[beamColorArray, 3]} />
         </bufferGeometry>
         <lineBasicMaterial
           vertexColors
@@ -227,11 +215,7 @@ function ContributorSprite({ index }: { index: number }): React.JSX.Element {
     }
 
     group.visible = true;
-    group.position.set(
-      rs.currentPosition[0],
-      rs.currentPosition[1],
-      rs.currentPosition[2],
-    );
+    group.position.set(rs.currentPosition[0], rs.currentPosition[1], rs.currentPosition[2]);
   });
 
   return (
@@ -239,11 +223,7 @@ function ContributorSprite({ index }: { index: number }): React.JSX.Element {
       <Billboard follow lockX={false} lockY={false} lockZ={false}>
         <mesh>
           <circleGeometry args={[0.4, 16]} />
-          <meshBasicMaterial
-            color={0xffffff}
-            transparent
-            opacity={0.9}
-          />
+          <meshBasicMaterial color={0xffffff} transparent opacity={0.9} />
         </mesh>
         <Text
           position={[0, -0.7, 0]}

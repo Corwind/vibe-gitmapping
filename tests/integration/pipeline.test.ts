@@ -177,11 +177,7 @@ describe('Integration: full pipeline from raw log to rendered data', () => {
     const { useAnimationStore } = await import('../../src/store/useAnimationStore');
     useAnimationStore.getState().reset();
 
-    const rawLog = [
-      '1000|Alice|A|a.ts|',
-      '2000|Bob|A|b.ts|',
-      '3000|Charlie|M|a.ts|',
-    ].join('\n');
+    const rawLog = ['1000|Alice|A|a.ts|', '2000|Bob|A|b.ts|', '3000|Charlie|M|a.ts|'].join('\n');
 
     const commits = parseGourceLog(rawLog);
     useAnimationStore.getState().setCommits(commits);

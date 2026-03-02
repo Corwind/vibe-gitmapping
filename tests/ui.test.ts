@@ -224,12 +224,7 @@ describe('computeHeatmap', () => {
   });
 
   it('distributes commits across buckets', () => {
-    const commits = [
-      { timestamp: 10 },
-      { timestamp: 15 },
-      { timestamp: 50 },
-      { timestamp: 90 },
-    ];
+    const commits = [{ timestamp: 10 }, { timestamp: 15 }, { timestamp: 50 }, { timestamp: 90 }];
     const result = computeHeatmap(commits, 0, 100, 10);
     expect(result.length).toBe(10);
     // Bucket 1 (0-10) should have 2 commits (10 and 15), normalized to 1

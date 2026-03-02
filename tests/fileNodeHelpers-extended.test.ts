@@ -120,19 +120,14 @@ describe('buildFileNodeArrays — extended', () => {
   });
 
   it('all alive files have opacity 1.0', () => {
-    const files = [
-      makeFile({ id: 'a.ts', alive: true }),
-      makeFile({ id: 'b.ts', alive: true }),
-    ];
+    const files = [makeFile({ id: 'a.ts', alive: true }), makeFile({ id: 'b.ts', alive: true })];
     const result = buildFileNodeArrays(files, 5000);
     expect(result.opacities[0]).toBeCloseTo(1.0);
     expect(result.opacities[1]).toBeCloseTo(1.0);
   });
 
   it('dead file within fadeout has partial opacity', () => {
-    const files = [
-      makeFile({ id: 'dying.ts', alive: false, lastModified: 1500 }),
-    ];
+    const files = [makeFile({ id: 'dying.ts', alive: false, lastModified: 1500 })];
     // currentTime=2000, elapsed=500ms, opacity = 1 - 500/1000 = 0.5
     const result = buildFileNodeArrays(files, 2000);
     expect(result.count).toBe(1);

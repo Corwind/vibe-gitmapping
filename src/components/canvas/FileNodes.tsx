@@ -11,14 +11,8 @@ import {
 } from 'three';
 import { useTreeStore } from '../../store/useTreeStore';
 import type { FileNode } from '../../types';
-import {
-  computeGlowScale,
-  computeFadeOpacity,
-} from '../../utils/fileNodeHelpers';
-import {
-  FILE_PULSE_DURATION_MS,
-  FILE_FADEOUT_DURATION_MS,
-} from '../../utils/constants';
+import { computeGlowScale, computeFadeOpacity } from '../../utils/fileNodeHelpers';
+import { FILE_PULSE_DURATION_MS, FILE_FADEOUT_DURATION_MS } from '../../utils/constants';
 
 /** Maximum number of instances the buffer can hold */
 const MAX_INSTANCES = 100_000;
@@ -79,10 +73,7 @@ export default function FileNodes(): React.JSX.Element {
     const files = getVisibleFiles();
 
     // Build frustum from camera for culling
-    _projScreenMatrix.multiplyMatrices(
-      camera.projectionMatrix,
-      camera.matrixWorldInverse,
-    );
+    _projScreenMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
     _frustum.setFromProjectionMatrix(_projScreenMatrix);
 
     // Ensure instanceColor attribute exists
@@ -119,10 +110,7 @@ export default function FileNodes(): React.JSX.Element {
 
       // Dirty check: only update matrix if position or scale changed
       const idx3 = visibleIdx * 3;
-      const posChanged =
-        prev[idx3] !== x ||
-        prev[idx3 + 1] !== y ||
-        prev[idx3 + 2] !== z;
+      const posChanged = prev[idx3] !== x || prev[idx3 + 1] !== y || prev[idx3 + 2] !== z;
       const needsAnimUpdate =
         (file.alive && elapsedMs < FILE_PULSE_DURATION_MS) ||
         (!file.alive && elapsedMs < FILE_FADEOUT_DURATION_MS);
@@ -166,15 +154,8 @@ export default function FileNodes(): React.JSX.Element {
   });
 
   return (
-    <instancedMesh
-      ref={meshRef}
-      args={[geometry, undefined, MAX_INSTANCES]}
-      frustumCulled={false}
-    >
-      <meshStandardMaterial
-        toneMapped={false}
-        vertexColors
-      />
+    <instancedMesh ref={meshRef} args={[geometry, undefined, MAX_INSTANCES]} frustumCulled={false}>
+      <meshStandardMaterial toneMapped={false} vertexColors />
     </instancedMesh>
   );
 }

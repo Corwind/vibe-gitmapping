@@ -105,7 +105,9 @@ export default function RepoInput(): React.JSX.Element | null {
       return;
     }
     // For now, URL cloning is a placeholder - would need a backend
-    setError('HTTP repository cloning requires a backend service. Please upload a Gource log file instead.');
+    setError(
+      'HTTP repository cloning requires a backend service. Please upload a Gource log file instead.',
+    );
     setInputSource({ type: 'url', url: trimmed });
   }, [urlInput, setError, setInputSource]);
 
@@ -130,11 +132,7 @@ export default function RepoInput(): React.JSX.Element | null {
               onChange={(e) => setUrlInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleUrlSubmit()}
             />
-            <button
-              style={styles.btn}
-              onClick={handleUrlSubmit}
-              disabled={loading}
-            >
+            <button style={styles.btn} onClick={handleUrlSubmit} disabled={loading}>
               Clone
             </button>
           </div>
@@ -175,9 +173,7 @@ export default function RepoInput(): React.JSX.Element | null {
           )}
         </div>
 
-        <p style={styles.formatHint}>
-          Format: timestamp|username|action|filepath|color
-        </p>
+        <p style={styles.formatHint}>Format: timestamp|username|action|filepath|color</p>
 
         {error && <p style={styles.error}>{error}</p>}
       </div>

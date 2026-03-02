@@ -1,10 +1,6 @@
 import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import {
-  BufferGeometry,
-  Float32BufferAttribute,
-  Color,
-} from 'three';
+import { BufferGeometry, Float32BufferAttribute, Color } from 'three';
 import { useTreeStore } from '../../store/useTreeStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import type { DirNode } from '../../types';
@@ -134,21 +130,10 @@ export default function DirectoryEdges(): React.JSX.Element | null {
   return (
     <lineSegments frustumCulled={false}>
       <bufferGeometry ref={geoRef}>
-        <bufferAttribute
-          attach="attributes-position"
-          args={[edgePositionArray, 3]}
-        />
-        <bufferAttribute
-          attach="attributes-color"
-          args={[edgeColorArray, 3]}
-        />
+        <bufferAttribute attach="attributes-position" args={[edgePositionArray, 3]} />
+        <bufferAttribute attach="attributes-color" args={[edgeColorArray, 3]} />
       </bufferGeometry>
-      <lineBasicMaterial
-        vertexColors
-        transparent
-        opacity={0.4}
-        depthWrite={false}
-      />
+      <lineBasicMaterial vertexColors transparent opacity={0.4} depthWrite={false} />
     </lineSegments>
   );
 }

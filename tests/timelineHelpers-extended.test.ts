@@ -10,32 +10,21 @@ describe('computeHeatmap — extended edge cases', () => {
   });
 
   it('all commits in one bucket normalizes to 1', () => {
-    const commits = [
-      { timestamp: 10 },
-      { timestamp: 11 },
-      { timestamp: 12 },
-    ];
+    const commits = [{ timestamp: 10 }, { timestamp: 11 }, { timestamp: 12 }];
     const result = computeHeatmap(commits, 0, 100, 10);
     // All in bucket 1
     expect(result[1]).toBe(1);
   });
 
   it('handles single bucket', () => {
-    const commits = [
-      { timestamp: 10 },
-      { timestamp: 50 },
-      { timestamp: 90 },
-    ];
+    const commits = [{ timestamp: 10 }, { timestamp: 50 }, { timestamp: 90 }];
     const result = computeHeatmap(commits, 0, 100, 1);
     expect(result).toHaveLength(1);
     expect(result[0]).toBe(1);
   });
 
   it('handles commits at exact boundary of range', () => {
-    const commits = [
-      { timestamp: 0 },
-      { timestamp: 100 },
-    ];
+    const commits = [{ timestamp: 0 }, { timestamp: 100 }];
     const result = computeHeatmap(commits, 0, 100, 10);
     expect(result.length).toBe(10);
     // timestamp 0 -> bucket 0

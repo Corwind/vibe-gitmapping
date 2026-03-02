@@ -81,7 +81,11 @@ export default function Controls(): React.JSX.Element | null {
           <button style={styles.btn} onClick={stepBackward} title="Previous commit (P)">
             {'|<'}
           </button>
-          <button style={{ ...styles.btn, ...styles.playBtn }} onClick={toggle} title="Play/Pause (Space)">
+          <button
+            style={{ ...styles.btn, ...styles.playBtn }}
+            onClick={toggle}
+            title="Play/Pause (Space)"
+          >
             {playing ? '||' : '\u25B6'}
           </button>
           <button style={styles.btn} onClick={stepForward} title="Next commit (N)">
@@ -159,10 +163,19 @@ export default function Controls(): React.JSX.Element | null {
   );
 }
 
-function Toggle(props: { label: string; checked: boolean; onChange: () => void }): React.JSX.Element {
+function Toggle(props: {
+  label: string;
+  checked: boolean;
+  onChange: () => void;
+}): React.JSX.Element {
   return (
     <label style={styles.toggleRow}>
-      <input type="checkbox" checked={props.checked} onChange={props.onChange} style={styles.checkbox} />
+      <input
+        type="checkbox"
+        checked={props.checked}
+        onChange={props.onChange}
+        style={styles.checkbox}
+      />
       <span style={styles.toggleLabel}>{props.label}</span>
     </label>
   );

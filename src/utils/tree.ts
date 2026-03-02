@@ -57,7 +57,7 @@ export class FileTree {
       children: [],
       position: [0, 0, 0],
       angle: 0,
-      depth: (this.dirs.get(parent)!.depth) + 1,
+      depth: this.dirs.get(parent)!.depth + 1,
     };
     this.dirs.set(dirPath, dir);
 

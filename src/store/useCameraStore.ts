@@ -25,8 +25,7 @@ export const useCameraStore = create<CameraState & CameraActions>()((set) => ({
   distance: DEFAULT_CAMERA_DISTANCE,
   autoTrackTarget: [0, 0, 0],
   setMode: (mode: CameraMode): void => set({ mode }),
-  toggleMode: (): void =>
-    set((s) => ({ mode: s.mode === 'orbit' ? 'tracking' : 'orbit' })),
+  toggleMode: (): void => set((s) => ({ mode: s.mode === 'orbit' ? 'tracking' : 'orbit' })),
   setTarget: (target: Vec3): void => set({ target }),
   setDistance: (distance: number): void => set({ distance }),
   setAutoTrackTarget: (target: Vec3): void => set({ autoTrackTarget: target }),
