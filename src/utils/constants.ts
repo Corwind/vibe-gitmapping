@@ -4,8 +4,8 @@ export const DEPTH_SPACING = 5;
 /** Minimum angular separation between sibling nodes (in radians) */
 export const MIN_ANGULAR_SEPARATION = 0.05;
 
-/** Default color for files with unknown extensions */
-export const DEFAULT_FILE_COLOR = 0x888888;
+/** Default color for files with unknown extensions — soft pastel grey */
+export const DEFAULT_FILE_COLOR = 0xb0b8c0;
 
 /** Playback speed: seconds of real time per day of git history */
 export const DEFAULT_SECONDS_PER_DAY = 1;

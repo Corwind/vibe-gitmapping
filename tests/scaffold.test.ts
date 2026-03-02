@@ -5,11 +5,11 @@ import { DEFAULT_FILE_COLOR, DEPTH_SPACING } from '../src/utils/constants';
 describe('scaffold smoke tests', () => {
   it('constants are defined', () => {
     expect(DEPTH_SPACING).toBeGreaterThan(0);
-    expect(DEFAULT_FILE_COLOR).toBe(0x888888);
+    expect(DEFAULT_FILE_COLOR).toBe(0xb0b8c0);
   });
 
   it('colorForExtension returns known color for .ts', () => {
-    expect(colorForExtension('ts')).toBe(0x3178c6);
+    expect(colorForExtension('ts')).toBe(0x7cb3e0);
   });
 
   it('colorForExtension returns default for unknown extension', () => {
@@ -17,7 +17,7 @@ describe('scaffold smoke tests', () => {
   });
 
   it('colorForExtension handles leading dot', () => {
-    expect(colorForExtension('.py')).toBe(0x3572a5);
+    expect(colorForExtension('.py')).toBe(0x9bb3d6);
   });
 
   it('parseHexColor parses valid hex', () => {

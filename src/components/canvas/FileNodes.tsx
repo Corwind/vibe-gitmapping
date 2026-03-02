@@ -1,5 +1,6 @@
 import { useRef, useMemo, useCallback } from 'react';
-import { useFrame, ThreeEvent } from '@react-three/fiber';
+import { useFrame } from '@react-three/fiber';
+import type { ThreeEvent } from '@react-three/fiber';
 import { InstancedMesh, Object3D, CircleGeometry, Color, InstancedBufferAttribute } from 'three';
 import { useTreeStore } from '../../store/useTreeStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
@@ -10,8 +11,8 @@ import { FILE_PULSE_DURATION_MS, FILE_FADEOUT_DURATION_MS } from '../../utils/co
 /** Maximum number of instances the buffer can hold */
 const MAX_INSTANCES = 100_000;
 
-/** Base scale for file node circles — small Gource-style dots */
-const BASE_SCALE = 0.35;
+/** Base scale for file node dots — small Gource-style points */
+const BASE_SCALE = 0.15;
 
 /** Reusable dummy Object3D for matrix computation — never allocate in loops */
 const _dummy = new Object3D();

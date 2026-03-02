@@ -15,7 +15,7 @@ function makeFile(overrides: Partial<FileNode> = {}): FileNode {
     name: 'test.ts',
     parent: 'src',
     extension: 'ts',
-    color: 0x3178c6,
+    color: 0x7cb3e0,
     position: [5, 0, 3] as Vec3,
     lastModified: 1000,
     lastAuthor: 'Alice',
@@ -26,11 +26,11 @@ function makeFile(overrides: Partial<FileNode> = {}): FileNode {
 
 describe('colorForExtension', () => {
   it('returns correct color for known extensions', () => {
-    expect(colorForExtension('ts')).toBe(0x3178c6);
-    expect(colorForExtension('js')).toBe(0xf7df1e);
-    expect(colorForExtension('py')).toBe(0x3572a5);
-    expect(colorForExtension('go')).toBe(0x00add8);
-    expect(colorForExtension('rs')).toBe(0xdea584);
+    expect(colorForExtension('ts')).toBe(0x7cb3e0);
+    expect(colorForExtension('js')).toBe(0xe8d87c);
+    expect(colorForExtension('py')).toBe(0x9bb3d6);
+    expect(colorForExtension('go')).toBe(0x7ccece);
+    expect(colorForExtension('rs')).toBe(0xe8c4a0);
   });
 
   it('returns default for unknown extensions', () => {
@@ -39,13 +39,13 @@ describe('colorForExtension', () => {
   });
 
   it('is case-insensitive', () => {
-    expect(colorForExtension('TS')).toBe(0x3178c6);
-    expect(colorForExtension('Js')).toBe(0xf7df1e);
+    expect(colorForExtension('TS')).toBe(0x7cb3e0);
+    expect(colorForExtension('Js')).toBe(0xe8d87c);
   });
 
   it('strips leading dot', () => {
-    expect(colorForExtension('.ts')).toBe(0x3178c6);
-    expect(colorForExtension('.py')).toBe(0x3572a5);
+    expect(colorForExtension('.ts')).toBe(0x7cb3e0);
+    expect(colorForExtension('.py')).toBe(0x9bb3d6);
   });
 });
 
