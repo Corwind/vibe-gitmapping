@@ -21,3 +21,9 @@ body,
     sans-serif;
   color: #e0e0e0;
 }
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

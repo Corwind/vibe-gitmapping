@@ -24,3 +24,19 @@ export const FILE_FADEOUT_DURATION_MS = 1000;
 
 /** Camera distance for the default overview position */
 export const DEFAULT_CAMERA_DISTANCE = 50;
+
+/** Available speed presets (seconds of real time per day of history) */
+export const SPEED_PRESETS: readonly number[] = [0.1, 0.5, 1, 2, 5, 10, 50, 100];
+
+/** Keyboard number key to speed preset mapping (1=0.1x, 5=1x, 9=100x) */
+export const KEY_SPEED_MAP: Record<string, number> = {
+  '1': 0.1,
+  '2': 0.25,
+  '3': 0.5,
+  '4': 0.75,
+  '5': 1,
+  '6': 2,
+  '7': 10,
+  '8': 50,
+  '9': 100,
+};
