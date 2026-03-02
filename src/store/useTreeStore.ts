@@ -11,6 +11,9 @@ export interface TreeState {
 export interface TreeActions {
   reset: () => void;
   setSelectedFileId: (id: string | null) => void;
+  setFiles: (files: Map<string, FileNode>) => void;
+  setDirs: (dirs: Map<string, DirNode>) => void;
+  setContributors: (contributors: Map<string, Contributor>) => void;
 }
 
 const initialState: TreeState = {
@@ -25,4 +28,7 @@ export const useTreeStore = create<TreeState & TreeActions>()((set) => ({
   reset: (): void =>
     set({ ...initialState, files: new Map(), dirs: new Map(), contributors: new Map() }),
   setSelectedFileId: (id: string | null): void => set({ selectedFileId: id }),
+  setFiles: (files: Map<string, FileNode>): void => set({ files }),
+  setDirs: (dirs: Map<string, DirNode>): void => set({ dirs }),
+  setContributors: (contributors: Map<string, Contributor>): void => set({ contributors }),
 }));

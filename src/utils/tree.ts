@@ -152,6 +152,16 @@ export class FileTree {
     return Array.from(this.files.values());
   }
 
+  /** Get the internal files Map (read-only reference, no copy). */
+  getFilesMap(): Map<string, FileNode> {
+    return this.files;
+  }
+
+  /** Get the internal dirs Map (read-only reference, no copy). */
+  getDirsMap(): Map<string, DirNode> {
+    return this.dirs;
+  }
+
   /** Apply a commit to the tree, processing all file changes. */
   applyCommit(commit: Commit): void {
     for (const change of commit.files) {

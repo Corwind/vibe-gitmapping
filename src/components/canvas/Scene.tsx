@@ -8,8 +8,15 @@ import FileNodes from './FileNodes';
 import DirectoryEdges from './DirectoryEdges';
 import Contributors from './Contributors';
 import Effects from './Effects';
+import { useAnimationEngine } from '../../hooks/useAnimationEngine';
 
 const _lerpTarget = new THREE.Vector3();
+
+/** Invisible component that drives the animation engine each frame. */
+function AnimationEngine(): null {
+  useAnimationEngine();
+  return null;
+}
 
 export default function Scene(): React.JSX.Element {
   const controlsRef = useRef<OrbitControlsImpl>(null);
@@ -27,6 +34,7 @@ export default function Scene(): React.JSX.Element {
 
   return (
     <>
+      <AnimationEngine />
       <ambientLight intensity={0.3} />
       <pointLight position={[10, 10, 10]} intensity={1} />
       <OrbitControls
