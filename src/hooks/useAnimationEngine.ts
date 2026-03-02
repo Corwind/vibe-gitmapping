@@ -7,7 +7,7 @@ import { useSettingsStore } from '../store/useSettingsStore';
 import { FileTree } from '../utils/tree';
 import { computeRadialLayout } from '../utils/layout';
 import { MAX_COMMITS_PER_FRAME } from '../utils/constants';
-import type { Commit, Contributor, FileNode, DirNode, Vec3 } from '../types';
+import type { Commit, Contributor, FileNode, DirNode, Vec3, FileChange } from '../types';
 
 /**
  * Simple numeric hash of a string to produce a deterministic color.
@@ -19,6 +19,21 @@ function hashStringToColor(str: string): number {
   }
   // Ensure positive and in 0x000000..0xFFFFFF range
   return ((hash & 0x00ffffff) + 0x333333) & 0x00ffffff;
+}
+
+/**
+ * After applying a commit to the FileTree, stamp the affected files' lastModified
+ * with R3F clock time (ms) so rendering effects (glow, fade) work correctly.
+ * Without this, lastModified holds Unix epoch seconds (~1.7B) while rendering
+ * uses clock.getElapsedTime() * 1000 (~5000), causing a domain mismatch.
+ */
+function stampCommitFiles(tree: FileTree, changes: FileChange[], clockTimeMs: number): void {
+  for (let i = 0; i < changes.length; i++) {
+    const file = tree.getFile(changes[i].path);
+    if (file) {
+      file.lastModified = clockTimeMs;
+    }
+  }
 }
 
 /**
@@ -136,6 +151,7 @@ export function useAnimationEngine(): void {
 
       for (let i = 0; i <= externalIndex && i < commits.length; i++) {
         freshTree.applyCommit(commits[i]);
+        stampCommitFiles(freshTree, commits[i].files, currentTimeMs);
         updateContributors(contributorsRef.current, commits[i], currentTimeMs);
       }
       appliedCommitIndexRef.current = externalIndex;
@@ -178,6 +194,7 @@ export function useAnimationEngine(): void {
       ) {
         newIndex++;
         tree.applyCommit(commits[newIndex]);
+        stampCommitFiles(tree, commits[newIndex].files, currentTimeMs);
         updateContributors(contributorsRef.current, commits[newIndex], currentTimeMs);
         commitsApplied++;
       }
@@ -209,6 +226,7 @@ export function useAnimationEngine(): void {
         ) {
           appliedCommitIndexRef.current++;
           tree.applyCommit(commits[appliedCommitIndexRef.current]);
+          stampCommitFiles(tree, commits[appliedCommitIndexRef.current].files, currentTimeMs);
           updateContributors(
             contributorsRef.current,
             commits[appliedCommitIndexRef.current],

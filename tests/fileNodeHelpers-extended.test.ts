@@ -24,9 +24,8 @@ function makeFile(overrides: Partial<FileNode> = {}): FileNode {
 }
 
 describe('computeGlowScale — boundary values', () => {
-  it('returns exactly 1.8 at elapsed=0', () => {
-    // t = 1 - 0/2000 = 1.0; scale = 1.0 + 0.8 * 1 * 1 = 1.8
-    expect(computeGlowScale(0)).toBeCloseTo(1.8, 5);
+  it('returns 1.0 at elapsed=0 (no glow for zero elapsed)', () => {
+    expect(computeGlowScale(0)).toBeCloseTo(1.0, 5);
   });
 
   it('returns exactly 1.0 at elapsed=FILE_PULSE_DURATION_MS', () => {
@@ -47,16 +46,15 @@ describe('computeGlowScale — boundary values', () => {
     expect(scale).toBeLessThan(1.8);
   });
 
-  it('handles negative elapsed (treats as fresh)', () => {
-    // Negative elapsed: t = 1 - (-100/2000) = 1.05, scale = 1 + 0.8 * 1.05^2
-    const scale = computeGlowScale(-100);
-    expect(scale).toBeGreaterThan(1.8);
+  it('returns 1.0 for negative elapsed (defense guard)', () => {
+    expect(computeGlowScale(-100)).toBeCloseTo(1.0, 5);
+    expect(computeGlowScale(-1_000_000_000)).toBeCloseTo(1.0, 5);
   });
 });
 
 describe('computeGlowEmissive — boundary values', () => {
-  it('returns exactly 1.0 at elapsed=0', () => {
-    expect(computeGlowEmissive(0)).toBeCloseTo(1.0, 5);
+  it('returns 0.0 at elapsed=0 (no emissive for zero elapsed)', () => {
+    expect(computeGlowEmissive(0)).toBeCloseTo(0.0, 5);
   });
 
   it('returns exactly 0.0 at elapsed=FILE_PULSE_DURATION_MS', () => {
@@ -97,10 +95,9 @@ describe('computeFadeOpacity — boundary values', () => {
     expect(computeFadeOpacity(false, FILE_FADEOUT_DURATION_MS + 500)).toBeCloseTo(0.0, 5);
   });
 
-  it('handles negative elapsed for dead file', () => {
-    // 1.0 - (-100 / 1000) = 1.1
-    const opacity = computeFadeOpacity(false, -100);
-    expect(opacity).toBeGreaterThan(1.0);
+  it('returns 1.0 for negative elapsed for dead file (defense guard)', () => {
+    expect(computeFadeOpacity(false, -100)).toBeCloseTo(1.0, 5);
+    expect(computeFadeOpacity(false, -1_000_000_000)).toBeCloseTo(1.0, 5);
   });
 });
 

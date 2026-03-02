@@ -15,16 +15,16 @@ const MAX_FLOATS = MAX_EDGES * 2 * 3;
 const edgePositionArray = new Float32Array(MAX_FLOATS);
 const edgeColorArray = new Float32Array(MAX_FLOATS);
 
-/** Subtle glow colors for directory edges — muted tones for Gource aesthetic */
+/** Brighter edge colors for directory edges — visible from top-down camera */
 const DEPTH_COLORS = [
-  new Color(0x334466),
-  new Color(0x2a5544),
-  new Color(0x554433),
-  new Color(0x443355),
-  new Color(0x335555),
-  new Color(0x554438),
-  new Color(0x445533),
-  new Color(0x553344),
+  new Color(0x5577aa),
+  new Color(0x44886a),
+  new Color(0x887755),
+  new Color(0x775588),
+  new Color(0x558888),
+  new Color(0x887760),
+  new Color(0x668844),
+  new Color(0x885566),
 ];
 
 /** Reusable Color for vertex color writes */
@@ -134,7 +134,7 @@ export default function DirectoryEdges(): React.JSX.Element | null {
         <bufferAttribute attach="attributes-position" args={[edgePositionArray, 3]} />
         <bufferAttribute attach="attributes-color" args={[edgeColorArray, 3]} />
       </bufferGeometry>
-      <lineBasicMaterial vertexColors transparent opacity={0.25} depthWrite={false} />
+      <lineBasicMaterial vertexColors transparent opacity={0.6} depthWrite={false} />
     </lineSegments>
   );
 }

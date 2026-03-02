@@ -26,7 +26,7 @@ export interface FileNodeArrays {
  * @returns scale factor (1.0 = normal, up to 1.8 = freshly modified)
  */
 export function computeGlowScale(elapsedMs: number): number {
-  if (elapsedMs >= FILE_PULSE_DURATION_MS) return 1.0;
+  if (elapsedMs <= 0 || elapsedMs >= FILE_PULSE_DURATION_MS) return 1.0;
   const t = 1.0 - elapsedMs / FILE_PULSE_DURATION_MS;
   return 1.0 + 0.8 * t * t;
 }
@@ -37,7 +37,7 @@ export function computeGlowScale(elapsedMs: number): number {
  * @returns emissive intensity (0.0 = none, up to 1.0 = bright glow)
  */
 export function computeGlowEmissive(elapsedMs: number): number {
-  if (elapsedMs >= FILE_PULSE_DURATION_MS) return 0.0;
+  if (elapsedMs <= 0 || elapsedMs >= FILE_PULSE_DURATION_MS) return 0.0;
   const t = 1.0 - elapsedMs / FILE_PULSE_DURATION_MS;
   return t * t;
 }
@@ -51,6 +51,7 @@ export function computeGlowEmissive(elapsedMs: number): number {
  */
 export function computeFadeOpacity(alive: boolean, elapsedSinceDeletion: number): number {
   if (alive) return 1.0;
+  if (elapsedSinceDeletion <= 0) return 1.0;
   if (elapsedSinceDeletion >= FILE_FADEOUT_DURATION_MS) return 0.0;
   return 1.0 - elapsedSinceDeletion / FILE_FADEOUT_DURATION_MS;
 }

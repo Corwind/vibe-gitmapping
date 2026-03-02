@@ -113,8 +113,13 @@ describe('buildFileNodeArrays', () => {
 });
 
 describe('computeGlowScale', () => {
-  it('returns max scale for freshly modified file', () => {
+  it('returns 1.0 at elapsed=0 (guard against zero/negative)', () => {
     const scale = computeGlowScale(0);
+    expect(scale).toBeCloseTo(1.0);
+  });
+
+  it('returns max scale for very recently modified file', () => {
+    const scale = computeGlowScale(1);
     expect(scale).toBeGreaterThan(1.0);
     expect(scale).toBeLessThanOrEqual(2.0);
   });
@@ -124,8 +129,8 @@ describe('computeGlowScale', () => {
     expect(scale).toBeCloseTo(1.0, 2);
   });
 
-  it('smoothly decreases over time', () => {
-    const s1 = computeGlowScale(0);
+  it('smoothly decreases over time (for positive elapsed)', () => {
+    const s1 = computeGlowScale(1);
     const s2 = computeGlowScale(500);
     const s3 = computeGlowScale(1000);
     const s4 = computeGlowScale(2000);
@@ -136,8 +141,12 @@ describe('computeGlowScale', () => {
 });
 
 describe('computeGlowEmissive', () => {
-  it('returns high emissive for freshly modified file', () => {
-    const em = computeGlowEmissive(0);
+  it('returns 0.0 at elapsed=0 (guard against zero/negative)', () => {
+    expect(computeGlowEmissive(0)).toBeCloseTo(0.0);
+  });
+
+  it('returns high emissive for very recently modified file', () => {
+    const em = computeGlowEmissive(1);
     expect(em).toBeGreaterThan(0.5);
   });
 
