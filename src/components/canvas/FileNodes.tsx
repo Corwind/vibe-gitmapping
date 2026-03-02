@@ -2,6 +2,7 @@ import { useRef, useMemo, useCallback } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { InstancedMesh, Object3D, SphereGeometry, Color, InstancedBufferAttribute } from 'three';
 import { useTreeStore } from '../../store/useTreeStore';
+import { useSettingsStore } from '../../store/useSettingsStore';
 import type { FileNode } from '../../types';
 import { computeGlowScale, computeFadeOpacity } from '../../utils/fileNodeHelpers';
 import { FILE_PULSE_DURATION_MS, FILE_FADEOUT_DURATION_MS } from '../../utils/constants';
@@ -37,10 +38,18 @@ export default function FileNodes(): React.JSX.Element {
   // Pre-allocate the geometry once — higher segment count for smoother circles
   const geometry = useMemo(() => new SphereGeometry(1, 16, 12), []);
 
-  // Build a snapshot of all files from the store.
+  // Build a snapshot of all files from the store, applying file filter if set.
   // Dead files are included so the useFrame loop can handle fade-out animation.
   const getVisibleFiles = useCallback((): FileNode[] => {
-    return Array.from(useTreeStore.getState().files.values());
+    const allFiles = Array.from(useTreeStore.getState().files.values());
+    const fileFilter = useSettingsStore.getState().fileFilter;
+    if (!fileFilter) return allFiles;
+    try {
+      const re = new RegExp(fileFilter);
+      return allFiles.filter((f) => re.test(f.id));
+    } catch {
+      return allFiles;
+    }
   }, []);
 
   useFrame(({ clock }) => {

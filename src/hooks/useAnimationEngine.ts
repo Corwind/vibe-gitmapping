@@ -2,6 +2,8 @@ import { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useAnimationStore } from '../store/useAnimationStore';
 import { useTreeStore } from '../store/useTreeStore';
+import { useCameraStore } from '../store/useCameraStore';
+import { useSettingsStore } from '../store/useSettingsStore';
 import { FileTree } from '../utils/tree';
 import { computeRadialLayout } from '../utils/layout';
 import { MAX_COMMITS_PER_FRAME } from '../utils/constants';
@@ -94,7 +96,7 @@ export function useAnimationEngine(): void {
     return unsub;
   }, []);
 
-  useFrame(({ clock }) => {
+  useFrame(({ clock }, delta) => {
     const animState = useAnimationStore.getState();
     const { commits, playing, secondsPerDay, currentCommitIndex } = animState;
 
@@ -143,12 +145,15 @@ export function useAnimationEngine(): void {
       treeStore.setFiles(files);
       treeStore.setDirs(dirs);
       treeStore.setContributors(new Map(contributorsRef.current));
+      updateAutoTrackTarget(contributorsRef.current, treeStore.files);
       return;
     }
 
     // Advance time if playing
     if (playing) {
-      const deltaSeconds = clock.getDelta();
+      // Use delta from useFrame (seconds since last frame) — NOT clock.getDelta()
+      // which R3F already consumed internally.
+      const deltaSeconds = Math.min(delta, 0.1); // Clamp to prevent huge jumps
       // secondsPerDay: how many real seconds = 1 day of repo history
       // So in deltaSeconds real time, we advance (deltaSeconds / secondsPerDay) days
       // = (deltaSeconds * 86400 / secondsPerDay) repo-seconds
@@ -186,6 +191,7 @@ export function useAnimationEngine(): void {
         treeStore.setFiles(files);
         treeStore.setDirs(dirs);
         treeStore.setContributors(new Map(contributorsRef.current));
+        updateAutoTrackTarget(contributorsRef.current, files);
       }
 
       // Check if we reached the end
@@ -216,6 +222,7 @@ export function useAnimationEngine(): void {
         treeStore.setFiles(files);
         treeStore.setDirs(dirs);
         treeStore.setContributors(new Map(contributorsRef.current));
+        updateAutoTrackTarget(contributorsRef.current, files);
       }
     }
   });
@@ -250,5 +257,30 @@ function updateContributors(
     contributor.targetFile = change.path;
     contributor.active = true;
     contributor.lastActiveTimestamp = clockTimeMs;
+  }
+}
+
+/**
+ * Update auto-camera tracking target to follow the most recently active contributor.
+ * Only updates when autoCamera is enabled in settings.
+ */
+function updateAutoTrackTarget(
+  contributors: Map<string, Contributor>,
+  files: Map<string, FileNode>,
+): void {
+  if (!useSettingsStore.getState().autoCamera) return;
+
+  let mostRecent: Contributor | null = null;
+  for (const c of contributors.values()) {
+    if (!mostRecent || c.lastActiveTimestamp > mostRecent.lastActiveTimestamp) {
+      mostRecent = c;
+    }
+  }
+
+  if (mostRecent?.targetFile) {
+    const file = files.get(mostRecent.targetFile);
+    if (file) {
+      useCameraStore.getState().setAutoTrackTarget(file.position);
+    }
   }
 }

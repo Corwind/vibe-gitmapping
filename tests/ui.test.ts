@@ -180,8 +180,8 @@ describe('useSettingsStore', () => {
     expect(state.showFileLabels).toBe(true);
     expect(state.showDirectoryNames).toBe(true);
     expect(state.showEdges).toBe(true);
-    expect(state.showBloom).toBe(false);
-    expect(state.autoCamera).toBe(false);
+    expect(state.showBloom).toBe(true);
+    expect(state.autoCamera).toBe(true);
     expect(state.colorScheme).toBe('language');
     expect(state.fileFilter).toBe('');
     expect(state.authorFilter).toBe('');
@@ -193,9 +193,9 @@ describe('useSettingsStore', () => {
     store.toggleFileLabels();
     expect(useSettingsStore.getState().showFileLabels).toBe(false);
     store.toggleBloom();
-    expect(useSettingsStore.getState().showBloom).toBe(true);
+    expect(useSettingsStore.getState().showBloom).toBe(false);
     store.toggleAutoCamera();
-    expect(useSettingsStore.getState().autoCamera).toBe(true);
+    expect(useSettingsStore.getState().autoCamera).toBe(false);
   });
 
   it('setColorScheme changes color scheme', () => {

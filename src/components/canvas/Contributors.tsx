@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
+import * as THREE from 'three';
 import { Group, BufferGeometry, Float32BufferAttribute, Color, Vector3 } from 'three';
 import { Text } from '@react-three/drei';
 import { useTreeStore } from '../../store/useTreeStore';
@@ -99,11 +100,7 @@ export default function Contributors(): React.JSX.Element {
       if (contributor.targetFile) {
         const targetFile = files.get(contributor.targetFile);
         if (targetFile) {
-          targetPos = [
-            targetFile.position[0],
-            CONTRIBUTOR_Y,
-            targetFile.position[2],
-          ];
+          targetPos = [targetFile.position[0], CONTRIBUTOR_Y, targetFile.position[2]];
         }
       }
 
@@ -205,8 +202,13 @@ export default function Contributors(): React.JSX.Element {
   );
 }
 
+/** Reusable Color for sprite color updates */
+const _spriteColor = new Color();
+
 function ContributorSprite({ index }: { index: number }): React.JSX.Element {
   const spriteGroupRef = useRef<Group>(null);
+  const meshRef = useRef<THREE.Mesh>(null);
+  const textRef = useRef<{ text: string }>(null);
 
   useFrame(() => {
     const group = spriteGroupRef.current;
@@ -220,17 +222,31 @@ function ContributorSprite({ index }: { index: number }): React.JSX.Element {
 
     group.visible = true;
     group.position.set(rs.currentPosition[0], rs.currentPosition[1], rs.currentPosition[2]);
+
+    // Update circle color to match contributor
+    if (meshRef.current) {
+      const mat = meshRef.current.material as THREE.MeshBasicMaterial;
+      _spriteColor.setHex(rs.color);
+      mat.color.copy(_spriteColor);
+      mat.opacity = rs.opacity;
+    }
+
+    // Update name label
+    if (textRef.current && textRef.current.text !== rs.name) {
+      textRef.current.text = rs.name;
+    }
   });
 
   return (
     <group ref={spriteGroupRef} visible={false}>
       {/* Flat circle visible from top-down camera — lies on XZ plane */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]}>
+      <mesh ref={meshRef} rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[0.6, 24]} />
         <meshBasicMaterial color={0xffffff} transparent opacity={0.9} />
       </mesh>
       {/* Name label positioned to the side, lying flat on XZ plane */}
       <Text
+        ref={textRef}
         position={[1.0, 0.1, 0]}
         rotation={[-Math.PI / 2, 0, 0]}
         fontSize={0.35}
