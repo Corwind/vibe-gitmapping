@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { FileTree } from '../src/utils/tree';
 import { computeRadialLayout } from '../src/utils/layout';
-import { DEPTH_SPACING } from '../src/utils/constants';
+import { DEPTH_SPACING, FILE_CLUSTER_SPACING } from '../src/utils/constants';
 
 describe('computeRadialLayout — extended edge cases', () => {
   let tree: FileTree;
@@ -24,7 +24,7 @@ describe('computeRadialLayout — extended edge cases', () => {
     tree.deleteFile('src/utils/helper.ts');
     // Dirs still exist: '', 'src', 'src/utils' — but helper.ts is dead
     const result = computeRadialLayout(tree);
-    // entries include root, src, src/utils, and the dead file (still in tree)
+    // entries include root, src, src/utils, and the dead file (still in tree children)
     expect(result.entries.length).toBeGreaterThanOrEqual(3);
   });
 
@@ -32,7 +32,6 @@ describe('computeRadialLayout — extended edge cases', () => {
     tree.addFile('a/b/c/d/e/file.ts', 1000, 'Alice');
     const result = computeRadialLayout(tree);
     // root -> a -> b -> c -> d -> e -> file.ts  (7 entries total)
-    // single child at each level means angle = parentAngle
     const aEntry = result.entries.find((e) => e.id === 'a');
     const bEntry = result.entries.find((e) => e.id === 'a/b');
     expect(aEntry).toBeDefined();
@@ -64,14 +63,19 @@ describe('computeRadialLayout — extended edge cases', () => {
     tree.addFile('shallow/leaf.ts', 1000, 'Alice');
 
     const result = computeRadialLayout(tree);
-    const deepLeaf = result.entries.find((e) => e.id === 'deep/a/b/c/d/leaf.ts');
-    const shallowLeaf = result.entries.find((e) => e.id === 'shallow/leaf.ts');
 
-    expect(deepLeaf).toBeDefined();
-    expect(shallowLeaf).toBeDefined();
+    // The deepest directory in the deep branch should be further out
+    // than the shallow directory
+    const deepDir = result.entries.find((e) => e.id === 'deep/a/b/c/d');
+    const shallowDir = result.entries.find((e) => e.id === 'shallow');
 
-    const deepDist = Math.sqrt(deepLeaf!.position[0] ** 2 + deepLeaf!.position[2] ** 2);
-    const shallowDist = Math.sqrt(shallowLeaf!.position[0] ** 2 + shallowLeaf!.position[2] ** 2);
+    expect(deepDir).toBeDefined();
+    expect(shallowDir).toBeDefined();
+
+    const deepDist = Math.sqrt(deepDir!.position[0] ** 2 + deepDir!.position[2] ** 2);
+    const shallowDist = Math.sqrt(
+      shallowDir!.position[0] ** 2 + shallowDir!.position[2] ** 2
+    );
     expect(deepDist).toBeGreaterThan(shallowDist);
   });
 
@@ -86,18 +90,33 @@ describe('computeRadialLayout — extended edge cases', () => {
     }
   });
 
-  it('child distance from center equals depth * DEPTH_SPACING', () => {
+  it('directory distance from center equals depth * DEPTH_SPACING', () => {
     tree.addFile('a/b/file.ts', 1000, 'Alice');
     const result = computeRadialLayout(tree);
 
     const aEntry = result.entries.find((e) => e.id === 'a');
     const bEntry = result.entries.find((e) => e.id === 'a/b');
-    const fileEntry = result.entries.find((e) => e.id === 'a/b/file.ts');
 
     const dist = (e: typeof aEntry) => Math.sqrt(e!.position[0] ** 2 + e!.position[2] ** 2);
     expect(dist(aEntry)).toBeCloseTo(1 * DEPTH_SPACING, 5);
     expect(dist(bEntry)).toBeCloseTo(2 * DEPTH_SPACING, 5);
-    expect(dist(fileEntry)).toBeCloseTo(3 * DEPTH_SPACING, 5);
+  });
+
+  it('file clusters near parent, not at depth * DEPTH_SPACING', () => {
+    tree.addFile('a/b/file.ts', 1000, 'Alice');
+    const result = computeRadialLayout(tree);
+
+    const bEntry = result.entries.find((e) => e.id === 'a/b');
+    const fileEntry = result.entries.find((e) => e.id === 'a/b/file.ts');
+
+    expect(bEntry).toBeDefined();
+    expect(fileEntry).toBeDefined();
+
+    // File should be at or very near the directory position (within cluster spacing)
+    const dx = fileEntry!.position[0] - bEntry!.position[0];
+    const dz = fileEntry!.position[2] - bEntry!.position[2];
+    const distFromDir = Math.sqrt(dx * dx + dz * dz);
+    expect(distFromDir).toBeLessThan(FILE_CLUSTER_SPACING * 2);
   });
 
   it('bounds encompass all node positions', () => {

@@ -1,5 +1,8 @@
 /** Default spacing between depth levels in the radial tree layout */
-export const DEPTH_SPACING = 5;
+export const DEPTH_SPACING = 3;
+
+/** Tight spacing between files packed in a honeycomb cluster at a directory */
+export const FILE_CLUSTER_SPACING = 0.35;
 
 /** Minimum angular separation between sibling nodes (in radians) */
 export const MIN_ANGULAR_SEPARATION = 0.05;

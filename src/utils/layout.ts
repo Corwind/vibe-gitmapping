@@ -1,19 +1,19 @@
 import type { Vec3, LayoutEntry, LayoutResult } from '../types';
-import { DEPTH_SPACING, MIN_ANGULAR_SEPARATION } from './constants';
+import { DEPTH_SPACING, FILE_CLUSTER_SPACING, MIN_ANGULAR_SEPARATION } from './constants';
 import { FileTree } from './tree';
 
 /**
- * Computes a radial tree layout for the given FileTree.
+ * Computes a Gource-style layout for the given FileTree.
  *
  * Algorithm:
  * - Root is placed at the origin (0, 0, 0).
- * - Each directory's children are spread radially around it.
- * - Depth determines the distance from the center.
- * - Files and subdirectories are placed at leaf positions.
+ * - Directories are spread radially from their parents (like branches).
+ * - Files are NOT placed on the radial tree. Instead, they are packed in
+ *   tight honeycomb clusters at their parent directory's position.
  * - All positions are on the XZ plane (Y=0).
  *
- * This is designed to be fast enough for incremental updates:
- * layout for 70k files should compute well within 16ms.
+ * This produces the characteristic Gource look: dense clusters of file dots
+ * at branch tips, connected by long edges from the center.
  */
 export function computeRadialLayout(tree: FileTree): LayoutResult {
   const entries: LayoutEntry[] = [];
@@ -22,7 +22,6 @@ export function computeRadialLayout(tree: FileTree): LayoutResult {
   let minZ = 0;
   let maxZ = 0;
 
-  // Track angle allocations per node
   const nodeAngles = new Map<string, number>();
   const nodePositions = new Map<string, Vec3>();
 
@@ -31,7 +30,10 @@ export function computeRadialLayout(tree: FileTree): LayoutResult {
   nodeAngles.set('', 0);
   entries.push({ id: '', position: [0, 0, 0], angle: 0 });
 
-  // BFS to lay out the tree level by level
+  // Collect file children per directory for honeycomb packing later
+  const fileChildrenPerDir = new Map<string, string[]>();
+
+  // BFS: lay out directories only on the radial tree
   const queue: string[] = [''];
 
   while (queue.length > 0) {
@@ -39,46 +41,85 @@ export function computeRadialLayout(tree: FileTree): LayoutResult {
     const dir = tree.getDir(dirId);
     if (!dir) continue;
 
-    const parentAngle = nodeAngles.get(dirId)!;
     const children = dir.children;
-
     if (children.length === 0) continue;
 
-    const childDepth = dir.depth + 1;
-    const radius = childDepth * DEPTH_SPACING;
+    // Separate directory children from file children
+    const subdirChildren: string[] = [];
+    const fileChildren: string[] = [];
 
-    // Calculate angular spread for children
-    // For the root, children span the full circle.
-    // For deeper nodes, children get a proportional arc.
-    const totalArc =
-      dirId === '' ? Math.PI * 2 : computeArcForChildren(children.length, childDepth);
+    for (const childId of children) {
+      if (tree.getDir(childId)) {
+        subdirChildren.push(childId);
+      } else {
+        fileChildren.push(childId);
+      }
+    }
 
-    const startAngle = dirId === '' ? 0 : parentAngle - totalArc / 2;
-    const step = children.length === 1 ? 0 : totalArc / (children.length - 1);
+    // Store file children for honeycomb packing
+    if (fileChildren.length > 0) {
+      fileChildrenPerDir.set(dirId, fileChildren);
+    }
 
-    for (let i = 0; i < children.length; i++) {
-      const childId = children[i];
-      const angle = children.length === 1 ? parentAngle : startAngle + i * step;
+    // Position subdirectory children radially
+    if (subdirChildren.length > 0) {
+      const parentAngle = nodeAngles.get(dirId)!;
+      const childDepth = dir.depth + 1;
+      const radius = childDepth * DEPTH_SPACING;
 
-      // Position relative to parent (for root) or absolute from center
-      const x = Math.cos(angle) * radius;
-      const z = Math.sin(angle) * radius;
+      // Angular spread: only count subdirectory children
+      const totalArc =
+        dirId === ''
+          ? Math.PI * 2
+          : computeArcForChildren(subdirChildren.length, childDepth);
+
+      const startAngle =
+        dirId === '' ? 0 : parentAngle - totalArc / 2;
+      const step =
+        subdirChildren.length === 1 ? 0 : totalArc / (subdirChildren.length - 1);
+
+      for (let i = 0; i < subdirChildren.length; i++) {
+        const childId = subdirChildren[i];
+        const angle =
+          subdirChildren.length === 1 ? parentAngle : startAngle + i * step;
+
+        const x = Math.cos(angle) * radius;
+        const z = Math.sin(angle) * radius;
+        const position: Vec3 = [x, 0, z];
+
+        nodeAngles.set(childId, angle);
+        nodePositions.set(childId, position);
+        entries.push({ id: childId, position, angle });
+
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (z < minZ) minZ = z;
+        if (z > maxZ) maxZ = z;
+
+        queue.push(childId);
+      }
+    }
+  }
+
+  // Pack file children in honeycomb clusters at their parent directory positions
+  for (const [dirId, fileChildren] of fileChildrenPerDir) {
+    const dirPos = nodePositions.get(dirId)!;
+    const dirAngle = nodeAngles.get(dirId)!;
+    const offsets = hexagonalPackOffsets(fileChildren.length);
+
+    for (let i = 0; i < fileChildren.length; i++) {
+      const fileId = fileChildren[i];
+      const [ox, oz] = offsets[i];
+      const x = dirPos[0] + ox;
+      const z = dirPos[2] + oz;
       const position: Vec3 = [x, 0, z];
 
-      nodeAngles.set(childId, angle);
-      nodePositions.set(childId, position);
-      entries.push({ id: childId, position, angle });
+      entries.push({ id: fileId, position, angle: dirAngle });
 
-      // Track bounds
       if (x < minX) minX = x;
       if (x > maxX) maxX = x;
       if (z < minZ) minZ = z;
       if (z > maxZ) maxZ = z;
-
-      // If this child is a directory, add it to the queue
-      if (tree.getDir(childId)) {
-        queue.push(childId);
-      }
     }
   }
 
@@ -94,8 +135,68 @@ export function computeRadialLayout(tree: FileTree): LayoutResult {
  * The arc is clamped to avoid overlap and ensure minimum separation.
  */
 function computeArcForChildren(childCount: number, depth: number): number {
-  // Base arc decreases with depth to prevent overcrowding
   const baseArc = Math.PI / Math.max(depth, 1);
   const neededArc = childCount * MIN_ANGULAR_SEPARATION;
   return Math.max(baseArc, neededArc);
+}
+
+/**
+ * Computes hexagonal packing offsets for N items around the origin.
+ *
+ * Places items in concentric hexagonal rings:
+ *   Ring 0: 1 item at center
+ *   Ring 1: 6 items
+ *   Ring 2: 12 items
+ *   Ring k: 6*k items
+ *
+ * Returns [x, z] offsets scaled by FILE_CLUSTER_SPACING.
+ */
+function hexagonalPackOffsets(count: number): [number, number][] {
+  if (count === 0) return [];
+
+  const offsets: [number, number][] = [];
+  const spacing = FILE_CLUSTER_SPACING;
+
+  // Ring 0: center
+  offsets.push([0, 0]);
+  if (offsets.length >= count) return offsets.slice(0, count);
+
+  // Hexagonal direction vectors (unit steps in hex grid)
+  // These move along the 6 edges of a hexagon
+  const hexDirs: [number, number][] = [
+    [1, 0],
+    [0.5, Math.sqrt(3) / 2],
+    [-0.5, Math.sqrt(3) / 2],
+    [-1, 0],
+    [-0.5, -Math.sqrt(3) / 2],
+    [0.5, -Math.sqrt(3) / 2],
+  ];
+
+  let ring = 1;
+  while (offsets.length < count) {
+    // Start position for this ring: move `ring` steps in the first hex direction
+    let cx = ring * spacing;
+    let cz = 0;
+
+    // Walk along 6 sides of the hexagon
+    for (let side = 0; side < 6 && offsets.length < count; side++) {
+      // Each side has `ring` steps, but the first step of side 0
+      // is the starting position we already set
+      const steps = ring;
+      // Direction for this side: rotate 120 degrees from the start direction
+      // Side 0 goes in direction hexDirs[2], side 1 in hexDirs[3], etc.
+      const dirIdx = (side + 2) % 6;
+      const [dx, dz] = hexDirs[dirIdx];
+
+      for (let step = 0; step < steps && offsets.length < count; step++) {
+        offsets.push([cx, cz]);
+        cx += dx * spacing;
+        cz += dz * spacing;
+      }
+    }
+
+    ring++;
+  }
+
+  return offsets.slice(0, count);
 }

@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { FileTree } from '../src/utils/tree';
 import { computeRadialLayout } from '../src/utils/layout';
+import { FILE_CLUSTER_SPACING } from '../src/utils/constants';
 
 describe('computeRadialLayout', () => {
   let tree: FileTree;
@@ -26,9 +27,16 @@ describe('computeRadialLayout', () => {
 
     for (const entry of result.entries) {
       if (entry.id === '') continue; // skip root
-      const dist = Math.sqrt(entry.position[0] ** 2 + entry.position[2] ** 2);
-      expect(dist).toBeGreaterThan(0);
+      // Files cluster at root (which is origin), but hex offsets give non-zero positions
+      // unless it's the very first file at the center of the cluster
+      // Just check that at least one is non-zero
     }
+    // At least one non-root entry should have non-zero distance
+    const nonRoot = result.entries.filter((e) => e.id !== '');
+    const hasNonZero = nonRoot.some(
+      (e) => Math.sqrt(e.position[0] ** 2 + e.position[2] ** 2) > 0
+    );
+    expect(hasNonZero).toBe(true);
   });
 
   it('all nodes get positions', () => {
@@ -68,9 +76,32 @@ describe('computeRadialLayout', () => {
       return Math.sqrt(entry.position[0] ** 2 + entry.position[2] ** 2);
     };
 
+    // Directories should still be ordered by depth
     expect(distanceOf('a')).toBeLessThan(distanceOf('a/b'));
     expect(distanceOf('a/b')).toBeLessThan(distanceOf('a/b/c'));
     expect(distanceOf('a/b/c')).toBeLessThan(distanceOf('a/b/c/d'));
+  });
+
+  it('files cluster near their parent directory', () => {
+    tree.addFile('src/a.ts', 1000, 'Alice');
+    tree.addFile('src/b.ts', 1000, 'Alice');
+    tree.addFile('src/c.ts', 1000, 'Alice');
+    const result = computeRadialLayout(tree);
+
+    const srcEntry = result.entries.find((e) => e.id === 'src');
+    expect(srcEntry).toBeDefined();
+    const srcPos = srcEntry!.position;
+
+    // Each file should be within a small radius of the src directory
+    const maxClusterRadius = FILE_CLUSTER_SPACING * 3; // generous bound
+    for (const fileId of ['src/a.ts', 'src/b.ts', 'src/c.ts']) {
+      const entry = result.entries.find((e) => e.id === fileId);
+      expect(entry).toBeDefined();
+      const dx = entry!.position[0] - srcPos[0];
+      const dz = entry!.position[2] - srcPos[2];
+      const dist = Math.sqrt(dx * dx + dz * dz);
+      expect(dist).toBeLessThan(maxClusterRadius);
+    }
   });
 
   it('computes bounds correctly', () => {
