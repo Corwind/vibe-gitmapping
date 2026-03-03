@@ -322,14 +322,14 @@ function ContributorNameLabel({
     <group ref={labelGroupRef} visible={false}>
       <Text
         ref={textRef}
-        position={[0.9, 0.1, 0]}
+        position={[7, 1, 0]}
         rotation={[-Math.PI / 2, 0, 0]}
-        fontSize={0.3}
+        fontSize={10}
         color="#ffffff"
         anchorX="left"
         anchorY="middle"
-        maxWidth={5}
-        outlineWidth={0.02}
+        maxWidth={150}
+        outlineWidth={0.3}
         outlineColor="#000000"
       >
         {''}

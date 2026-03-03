@@ -5,8 +5,15 @@ import { Text } from '@react-three/drei';
 import { useTreeStore } from '../../store/useTreeStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 
-/** Offset from the file dot to the label (world units at zoom=1). */
-const BASE_OFFSET = 1.0;
+/**
+ * All values below are in effective screen pixels because the group is scaled
+ * by 1/zoom, and the ortho camera maps 1 world unit = zoom pixels.
+ * So localValue * (1/zoom) * zoom = localValue screen pixels.
+ */
+const LABEL_OFFSET_PX = 8;
+const FONT_SIZE_PX = 12;
+const OUTLINE_WIDTH_PX = 0.4;
+const MAX_WIDTH_PX = 200;
 
 /**
  * FileLabels shows a filename tooltip next to the file node the user is hovering over.
@@ -42,7 +49,7 @@ export default function FileLabels(): React.JSX.Element | null {
     const invZoom = 1 / zoom;
 
     group.visible = true;
-    group.position.set(file.position[0] + BASE_OFFSET * invZoom, 0.2, file.position[2]);
+    group.position.set(file.position[0] + LABEL_OFFSET_PX * invZoom, 0.2, file.position[2]);
     group.scale.set(invZoom, invZoom, invZoom);
 
     if (textRef.current && prevFileId.current !== hoveredFileId) {
@@ -57,12 +64,12 @@ export default function FileLabels(): React.JSX.Element | null {
       <Text
         ref={textRef}
         rotation={[-Math.PI / 2, 0, 0]}
-        fontSize={1.5}
+        fontSize={FONT_SIZE_PX}
         color="#ffffff"
         anchorX="left"
         anchorY="middle"
-        maxWidth={20}
-        outlineWidth={0.05}
+        maxWidth={MAX_WIDTH_PX}
+        outlineWidth={OUTLINE_WIDTH_PX}
         outlineColor="#000000"
       >
         {''}
