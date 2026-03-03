@@ -301,13 +301,21 @@ function ContributorNameLabel({
 }): React.JSX.Element {
   const labelGroupRef = useRef<Group>(null);
 
-  useFrame(() => {
+  useFrame(({ camera }) => {
     const rs = renderStatePool[index];
     const group = labelGroupRef.current;
     if (!group || !rs) return;
 
     const hoveredName = useTreeStore.getState().hoveredContributorName;
-    group.visible = hoveredName === rs.name && rs.opacity > 0;
+    const isVisible = hoveredName === rs.name && rs.opacity > 0;
+    group.visible = isVisible;
+
+    if (isVisible) {
+      // Scale inversely with zoom so label keeps constant screen size
+      const zoom = (camera as THREE.OrthographicCamera).zoom ?? 8;
+      const invZoom = 1 / zoom;
+      group.scale.set(invZoom, invZoom, invZoom);
+    }
   });
 
   return (
