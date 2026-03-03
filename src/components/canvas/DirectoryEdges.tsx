@@ -15,16 +15,16 @@ const MAX_FLOATS = MAX_EDGES * 2 * 3;
 const edgePositionArray = new Float32Array(MAX_FLOATS);
 const edgeColorArray = new Float32Array(MAX_FLOATS);
 
-/** Brighter edge colors for directory edges — visible from top-down camera */
+/** Warm amber/golden edge colors — organic tree-branch feel like Gource */
 const DEPTH_COLORS = [
-  new Color(0x5577aa),
-  new Color(0x44886a),
-  new Color(0x887755),
-  new Color(0x775588),
-  new Color(0x558888),
-  new Color(0x887760),
-  new Color(0x668844),
-  new Color(0x885566),
+  new Color(0xcc9944),
+  new Color(0xbb8833),
+  new Color(0xddaa55),
+  new Color(0xaa7733),
+  new Color(0xccaa66),
+  new Color(0xbb9944),
+  new Color(0xddbb66),
+  new Color(0xcc8844),
 ];
 
 /** Reusable Color for vertex color writes */
@@ -86,38 +86,6 @@ export default function DirectoryEdges(): React.JSX.Element | null {
       vertexIdx += 3;
     }
 
-    // Dir-to-file edges
-    const files = state.files;
-    for (const file of files.values()) {
-      if (!file.alive) continue;
-      const parentDir = dirs.get(file.parent);
-      if (!parentDir) continue;
-
-      if (vertexIdx / 3 >= MAX_FLOATS / 3 - 6) break;
-
-      edgePositionArray[vertexIdx] = parentDir.position[0];
-      edgePositionArray[vertexIdx + 1] = parentDir.position[1];
-      edgePositionArray[vertexIdx + 2] = parentDir.position[2];
-
-      _col.copy(depthColor(parentDir.depth));
-      edgeColorArray[vertexIdx] = _col.r;
-      edgeColorArray[vertexIdx + 1] = _col.g;
-      edgeColorArray[vertexIdx + 2] = _col.b;
-
-      vertexIdx += 3;
-
-      edgePositionArray[vertexIdx] = file.position[0];
-      edgePositionArray[vertexIdx + 1] = file.position[1];
-      edgePositionArray[vertexIdx + 2] = file.position[2];
-
-      _col.copy(depthColor(parentDir.depth + 1));
-      edgeColorArray[vertexIdx] = _col.r;
-      edgeColorArray[vertexIdx + 1] = _col.g;
-      edgeColorArray[vertexIdx + 2] = _col.b;
-
-      vertexIdx += 3;
-    }
-
     const posAttr = geo.getAttribute('position') as Float32BufferAttribute;
     const colAttr = geo.getAttribute('color') as Float32BufferAttribute;
 
@@ -134,7 +102,7 @@ export default function DirectoryEdges(): React.JSX.Element | null {
         <bufferAttribute attach="attributes-position" args={[edgePositionArray, 3]} />
         <bufferAttribute attach="attributes-color" args={[edgeColorArray, 3]} />
       </bufferGeometry>
-      <lineBasicMaterial vertexColors transparent opacity={0.6} depthWrite={false} />
+      <lineBasicMaterial vertexColors transparent opacity={0.7} depthWrite={false} />
     </lineSegments>
   );
 }
