@@ -109,6 +109,22 @@ gource --output-custom-log my-repo.log /path/to/repo
    - Bloom post-processing for glow effects
 5. **Animation Engine** — A `useFrame` loop advances through commits at the configured speed, applying file changes to the tree, updating the layout, and driving pulse/fade/travel animations.
 
+## Docker
+
+Build and run the app as a container:
+
+```bash
+# Build the image
+docker build -t vibe-gitmapping .
+
+# Run on port 8080
+docker run -p 8080:80 vibe-gitmapping
+```
+
+Open [http://localhost:8080](http://localhost:8080) in your browser.
+
+The image uses a multi-stage build (Node 22 + nginx-alpine) so the final image contains only the static bundle and a minimal nginx server.
+
 ## Development
 
 ```bash
