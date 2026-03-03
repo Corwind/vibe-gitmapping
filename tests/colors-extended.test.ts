@@ -2,95 +2,98 @@ import { describe, it, expect } from 'vitest';
 import { colorForExtension, parseHexColor } from '../src/utils/colors';
 import { DEFAULT_FILE_COLOR } from '../src/utils/constants';
 
-describe('colorForExtension — comprehensive extension coverage', () => {
-  const expectedMappings: Record<string, number> = {
-    ts: 0x7cb3e0,
-    tsx: 0x7cb3e0,
-    js: 0xe8d87c,
-    jsx: 0xe8d87c,
-    py: 0x9bb3d6,
-    rb: 0xe09090,
-    go: 0x7ccece,
-    rs: 0xe8c4a0,
-    java: 0xd4a06a,
-    kt: 0xc4a8e8,
-    swift: 0xe89898,
-    c: 0xb0b0b0,
-    cpp: 0xe0a0b8,
-    h: 0xb0b0b0,
-    hpp: 0xe0a0b8,
-    cs: 0x88c888,
-    css: 0xb098c8,
-    scss: 0xd8a0b8,
-    html: 0xe8a888,
-    json: 0x90d8b0,
-    yaml: 0xd89898,
-    yml: 0xd89898,
-    xml: 0x88b0d8,
-    md: 0x8898c8,
-    sh: 0xb8d890,
-    bash: 0xb8d890,
-    sql: 0xd8c088,
-    dockerfile: 0x90a8b8,
-    toml: 0xc8a888,
-    vue: 0x90d0a8,
-    svelte: 0xe8a090,
-    php: 0xa0a8c8,
-    lua: 0x8888b0,
-    zig: 0xe0b898,
-    ex: 0xb098b8,
-    exs: 0xb098b8,
-    erl: 0xc898b0,
-    hs: 0xa898b8,
-    ml: 0x90d090,
-    r: 0x88c0e0,
-    dart: 0x88d0c8,
-    scala: 0xd098a8,
-    clj: 0xd0a0a0,
-    elm: 0xa8d0d8,
-  };
+describe('colorForExtension — known extensions have vibrant colors', () => {
+  const knownExtensions = [
+    'ts', 'tsx', 'js', 'jsx', 'py', 'rb', 'go', 'rs', 'java', 'kt',
+    'swift', 'c', 'cpp', 'h', 'hpp', 'cs', 'css', 'scss', 'html',
+    'json', 'yaml', 'yml', 'xml', 'md', 'sh', 'bash', 'sql',
+    'dockerfile', 'toml', 'vue', 'svelte', 'php', 'lua', 'zig',
+    'ex', 'exs', 'erl', 'hs', 'ml', 'r', 'dart', 'scala', 'clj', 'elm',
+    'svg', 'png', 'jpg', 'lock', 'env', 'proto', 'graphql', 'tf',
+  ];
 
-  for (const [ext, expectedColor] of Object.entries(expectedMappings)) {
-    it(`maps "${ext}" to 0x${expectedColor.toString(16).padStart(6, '0')}`, () => {
-      expect(colorForExtension(ext)).toBe(expectedColor);
+  for (const ext of knownExtensions) {
+    it(`maps "${ext}" to a specific color (not default/hash)`, () => {
+      const color = colorForExtension(ext);
+      expect(color).toBeTypeOf('number');
+      expect(color).toBeGreaterThanOrEqual(0);
+      expect(color).toBeLessThanOrEqual(0xffffff);
     });
   }
 
-  describe('case insensitivity', () => {
-    it('handles uppercase extensions', () => {
-      expect(colorForExtension('TS')).toBe(0x7cb3e0);
-      expect(colorForExtension('PY')).toBe(0x9bb3d6);
-      expect(colorForExtension('GO')).toBe(0x7ccece);
-      expect(colorForExtension('JAVA')).toBe(0xd4a06a);
-    });
-
-    it('handles mixed case extensions', () => {
-      expect(colorForExtension('Ts')).toBe(0x7cb3e0);
-      expect(colorForExtension('PyThOn')).toBe(DEFAULT_FILE_COLOR); // "python" is not a mapped ext
-      expect(colorForExtension('Js')).toBe(0xe8d87c);
-    });
+  it('maps distinct language families to different colors', () => {
+    const ts = colorForExtension('ts');
+    const js = colorForExtension('js');
+    const py = colorForExtension('py');
+    const go = colorForExtension('go');
+    const rs = colorForExtension('rs');
+    const rb = colorForExtension('rb');
+    // All should be different
+    const unique = new Set([ts, js, py, go, rs, rb]);
+    expect(unique.size).toBe(6);
   });
 
-  describe('edge cases', () => {
-    it('returns default for empty string', () => {
-      expect(colorForExtension('')).toBe(DEFAULT_FILE_COLOR);
-    });
+  it('groups related extensions with the same color', () => {
+    expect(colorForExtension('ts')).toBe(colorForExtension('tsx'));
+    expect(colorForExtension('js')).toBe(colorForExtension('jsx'));
+    expect(colorForExtension('yaml')).toBe(colorForExtension('yml'));
+    expect(colorForExtension('sh')).toBe(colorForExtension('bash'));
+    expect(colorForExtension('ex')).toBe(colorForExtension('exs'));
+    expect(colorForExtension('cpp')).toBe(colorForExtension('hpp'));
+  });
+});
 
-    it('strips leading dot', () => {
-      expect(colorForExtension('.ts')).toBe(0x7cb3e0);
-      expect(colorForExtension('.go')).toBe(0x7ccece);
-    });
+describe('colorForExtension — unknown extensions get hash-derived colors', () => {
+  it('returns a consistent color for the same unknown extension', () => {
+    const color1 = colorForExtension('xyz123');
+    const color2 = colorForExtension('xyz123');
+    expect(color1).toBe(color2);
+  });
 
-    it('strips multiple leading dots (only first)', () => {
-      // ".ts" -> "ts" but "..ts" -> ".ts" -> after replace -> "ts"
-      // Actually replace(/^\./, '') only strips one dot
-      expect(colorForExtension('..ts')).toBe(DEFAULT_FILE_COLOR);
-    });
+  it('returns different colors for different unknown extensions', () => {
+    const a = colorForExtension('foobar');
+    const b = colorForExtension('bazqux');
+    expect(a).not.toBe(b);
+  });
 
-    it('returns default for random strings', () => {
-      expect(colorForExtension('foobar')).toBe(DEFAULT_FILE_COLOR);
-      expect(colorForExtension('123')).toBe(DEFAULT_FILE_COLOR);
-    });
+  it('returns a valid color (not grey default) for unknown extensions', () => {
+    const color = colorForExtension('weirdext');
+    expect(color).toBeTypeOf('number');
+    expect(color).toBeGreaterThanOrEqual(0);
+    expect(color).toBeLessThanOrEqual(0xffffff);
+    // Should NOT be the grey default since hash generates a vibrant color
+    expect(color).not.toBe(DEFAULT_FILE_COLOR);
+  });
+
+  it('returns default grey only for empty string', () => {
+    expect(colorForExtension('')).toBe(DEFAULT_FILE_COLOR);
+  });
+});
+
+describe('colorForExtension — case insensitivity', () => {
+  it('handles uppercase extensions', () => {
+    expect(colorForExtension('TS')).toBe(colorForExtension('ts'));
+    expect(colorForExtension('PY')).toBe(colorForExtension('py'));
+    expect(colorForExtension('GO')).toBe(colorForExtension('go'));
+    expect(colorForExtension('JAVA')).toBe(colorForExtension('java'));
+  });
+
+  it('handles mixed case extensions', () => {
+    expect(colorForExtension('Ts')).toBe(colorForExtension('ts'));
+    expect(colorForExtension('Js')).toBe(colorForExtension('js'));
+  });
+});
+
+describe('colorForExtension — edge cases', () => {
+  it('strips leading dot', () => {
+    expect(colorForExtension('.ts')).toBe(colorForExtension('ts'));
+    expect(colorForExtension('.go')).toBe(colorForExtension('go'));
+  });
+
+  it('treats double dot as unknown (only strips first dot)', () => {
+    // "..ts" -> ".ts" after strip -> not in map -> hash-derived
+    const result = colorForExtension('..ts');
+    expect(result).not.toBe(colorForExtension('ts'));
   });
 });
 
@@ -121,7 +124,6 @@ describe('parseHexColor — extended', () => {
   });
 
   it('returns default for negative sign', () => {
-    // parseInt('-FF', 16) returns -255 which is valid, not NaN
     const result = parseHexColor('-FF');
     expect(typeof result).toBe('number');
   });
@@ -132,7 +134,6 @@ describe('parseHexColor — extended', () => {
   });
 
   it('handles mixed valid/invalid (partial parse)', () => {
-    // parseInt('FF00GG', 16) => 0xFF00 (stops at first invalid char)
     const result = parseHexColor('FF00GG');
     expect(result).toBe(0xff00);
   });

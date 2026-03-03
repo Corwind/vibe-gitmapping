@@ -9,15 +9,17 @@ describe('scaffold smoke tests', () => {
   });
 
   it('colorForExtension returns known color for .ts', () => {
-    expect(colorForExtension('ts')).toBe(0x7cb3e0);
+    expect(colorForExtension('ts')).toBe(0x3b82f6);
   });
 
-  it('colorForExtension returns default for unknown extension', () => {
-    expect(colorForExtension('xyz')).toBe(DEFAULT_FILE_COLOR);
+  it('colorForExtension returns hash-derived color for unknown extension', () => {
+    // Unknown extensions get a hash-derived vibrant color, not the grey default
+    expect(colorForExtension('xyz')).not.toBe(DEFAULT_FILE_COLOR);
+    expect(colorForExtension('xyz')).toBeTypeOf('number');
   });
 
   it('colorForExtension handles leading dot', () => {
-    expect(colorForExtension('.py')).toBe(0x9bb3d6);
+    expect(colorForExtension('.py')).toBe(0x3572a5);
   });
 
   it('parseHexColor parses valid hex', () => {

@@ -26,26 +26,28 @@ function makeFile(overrides: Partial<FileNode> = {}): FileNode {
 
 describe('colorForExtension', () => {
   it('returns correct color for known extensions', () => {
-    expect(colorForExtension('ts')).toBe(0x7cb3e0);
-    expect(colorForExtension('js')).toBe(0xe8d87c);
-    expect(colorForExtension('py')).toBe(0x9bb3d6);
-    expect(colorForExtension('go')).toBe(0x7ccece);
-    expect(colorForExtension('rs')).toBe(0xe8c4a0);
+    expect(colorForExtension('ts')).toBe(0x3b82f6);
+    expect(colorForExtension('js')).toBe(0xfacc15);
+    expect(colorForExtension('py')).toBe(0x3572a5);
+    expect(colorForExtension('go')).toBe(0x00add8);
+    expect(colorForExtension('rs')).toBe(0xf74c00);
   });
 
-  it('returns default for unknown extensions', () => {
-    expect(colorForExtension('xyz')).toBe(DEFAULT_FILE_COLOR);
+  it('returns hash-derived color for unknown extensions (not default grey)', () => {
+    // Unknown extensions get a hash-derived vibrant color, not the grey default
+    expect(colorForExtension('xyz')).not.toBe(DEFAULT_FILE_COLOR);
+    // Empty string still returns default
     expect(colorForExtension('')).toBe(DEFAULT_FILE_COLOR);
   });
 
   it('is case-insensitive', () => {
-    expect(colorForExtension('TS')).toBe(0x7cb3e0);
-    expect(colorForExtension('Js')).toBe(0xe8d87c);
+    expect(colorForExtension('TS')).toBe(0x3b82f6);
+    expect(colorForExtension('Js')).toBe(0xfacc15);
   });
 
   it('strips leading dot', () => {
-    expect(colorForExtension('.ts')).toBe(0x7cb3e0);
-    expect(colorForExtension('.py')).toBe(0x9bb3d6);
+    expect(colorForExtension('.ts')).toBe(0x3b82f6);
+    expect(colorForExtension('.py')).toBe(0x3572a5);
   });
 });
 
