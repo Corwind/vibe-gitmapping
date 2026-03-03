@@ -1,10 +1,9 @@
-import { useRef, useMemo, useCallback } from 'react';
+import { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
-import type { ThreeEvent } from '@react-three/fiber';
 import { InstancedMesh, Object3D, CircleGeometry, Color, InstancedBufferAttribute } from 'three';
-import { useTreeStore } from '../../store/useTreeStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import type { FileNode } from '../../types';
+import { useTreeStore } from '../../store/useTreeStore';
 import { computeGlowScale, computeFadeOpacity } from '../../utils/fileNodeHelpers';
 import { FILE_PULSE_DURATION_MS, FILE_FADEOUT_DURATION_MS } from '../../utils/constants';
 
@@ -22,11 +21,24 @@ _dummy.rotation.set(-Math.PI / 2, 0, 0);
 /** Reusable Color for instance color updates */
 const _color = new Color();
 
+/** Get visible files from the store, applying file filter if set. */
+function getVisibleFiles(): FileNode[] {
+  const allFiles = Array.from(useTreeStore.getState().files.values());
+  const fileFilter = useSettingsStore.getState().fileFilter;
+  if (!fileFilter) return allFiles;
+  try {
+    const re = new RegExp(fileFilter);
+    return allFiles.filter((f) => re.test(f.id));
+  } catch {
+    return allFiles;
+  }
+}
+
 /**
  * FileNodes renders all file nodes in the repository tree as a single InstancedMesh.
  * Uses per-instance color via instanceColor attribute.
  * Glow/pulse for recently modified files, fade-out for deleted files.
- * Supports hover detection via instanceId raycasting.
+ * Hover detection is handled by HoverDetector (ground plane approach).
  */
 export default function FileNodes(): React.JSX.Element {
   const meshRef = useRef<InstancedMesh>(null);
@@ -35,41 +47,8 @@ export default function FileNodes(): React.JSX.Element {
   const prevPositions = useRef<Float32Array>(new Float32Array(MAX_INSTANCES * 3));
   const activeCountRef = useRef(0);
 
-  // Map from instance index to file ID for hover lookup
-  const instanceToFileId = useRef<string[]>([]);
-
   // Flat circle geometry — visible from top-down camera, cheaper than sphere
   const geometry = useMemo(() => new CircleGeometry(1, 24), []);
-
-  // Build a snapshot of all files from the store, applying file filter if set.
-  const getVisibleFiles = useCallback((): FileNode[] => {
-    const allFiles = Array.from(useTreeStore.getState().files.values());
-    const fileFilter = useSettingsStore.getState().fileFilter;
-    if (!fileFilter) return allFiles;
-    try {
-      const re = new RegExp(fileFilter);
-      return allFiles.filter((f) => re.test(f.id));
-    } catch {
-      return allFiles;
-    }
-  }, []);
-
-  const handlePointerMove = useCallback((e: ThreeEvent<PointerEvent>) => {
-    e.stopPropagation();
-    const instanceId = e.instanceId;
-    if (instanceId !== undefined && instanceId < instanceToFileId.current.length) {
-      const fileId = instanceToFileId.current[instanceId];
-      if (fileId) {
-        useTreeStore.getState().setHoveredFileId(fileId);
-        return;
-      }
-    }
-    useTreeStore.getState().setHoveredFileId(null);
-  }, []);
-
-  const handlePointerOut = useCallback(() => {
-    useTreeStore.getState().setHoveredFileId(null);
-  }, []);
 
   useFrame(({ clock }) => {
     const mesh = meshRef.current;
@@ -86,7 +65,6 @@ export default function FileNodes(): React.JSX.Element {
 
     const colorAttr = mesh.instanceColor;
     const prev = prevPositions.current;
-    const idMapping: string[] = [];
     let visibleIdx = 0;
 
     for (let i = 0; i < files.length; i++) {
@@ -142,19 +120,12 @@ export default function FileNodes(): React.JSX.Element {
       }
 
       colorAttr.setXYZ(visibleIdx, _color.r, _color.g, _color.b);
-      idMapping.push(file.id);
       visibleIdx++;
     }
-
-    // Update instance-to-fileId mapping for hover detection
-    instanceToFileId.current = idMapping;
 
     // Update active count
     mesh.count = visibleIdx;
     activeCountRef.current = visibleIdx;
-
-    // Recompute bounding sphere so raycasting works on the InstancedMesh
-    mesh.computeBoundingSphere();
 
     // Flag attributes for GPU upload
     mesh.instanceMatrix.needsUpdate = true;
@@ -168,8 +139,6 @@ export default function FileNodes(): React.JSX.Element {
       ref={meshRef}
       args={[geometry, undefined, MAX_INSTANCES]}
       frustumCulled={false}
-      onPointerMove={handlePointerMove}
-      onPointerOut={handlePointerOut}
     >
       <meshBasicMaterial toneMapped={false} transparent opacity={0.95} />
     </instancedMesh>

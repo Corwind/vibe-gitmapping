@@ -10,6 +10,7 @@ import FileLabels from './FileLabels';
 import DirectoryEdges from './DirectoryEdges';
 import Contributors from './Contributors';
 import Effects from './Effects';
+import HoverDetector from './HoverDetector';
 import { useAnimationEngine } from '../../hooks/useAnimationEngine';
 
 const _lerpTarget = new THREE.Vector3();
@@ -88,6 +89,7 @@ export default function Scene(): React.JSX.Element {
           RIGHT: THREE.MOUSE.PAN,
         }}
       />
+      <HoverDetector />
       <FileNodes />
       <FileLabels />
       <DirectoryEdges />
