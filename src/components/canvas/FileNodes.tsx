@@ -153,6 +153,9 @@ export default function FileNodes(): React.JSX.Element {
     mesh.count = visibleIdx;
     activeCountRef.current = visibleIdx;
 
+    // Recompute bounding sphere so raycasting works on the InstancedMesh
+    mesh.computeBoundingSphere();
+
     // Flag attributes for GPU upload
     mesh.instanceMatrix.needsUpdate = true;
     if (colorAttr) {

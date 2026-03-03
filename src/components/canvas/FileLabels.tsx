@@ -34,7 +34,7 @@ export default function FileLabels(): React.JSX.Element | null {
     }
 
     group.visible = true;
-    group.position.set(file.position[0] + 0.6, 0.2, file.position[2]);
+    group.position.set(file.position[0] + 1.0, 0.2, file.position[2]);
 
     if (textRef.current && prevFileId.current !== hoveredFileId) {
       const filename = file.id.split('/').pop() ?? file.id;
@@ -48,12 +48,12 @@ export default function FileLabels(): React.JSX.Element | null {
       <Text
         ref={textRef}
         rotation={[-Math.PI / 2, 0, 0]}
-        fontSize={0.25}
+        fontSize={1.5}
         color="#ffffff"
         anchorX="left"
         anchorY="middle"
-        maxWidth={8}
-        outlineWidth={0.02}
+        maxWidth={20}
+        outlineWidth={0.05}
         outlineColor="#000000"
       >
         {''}
